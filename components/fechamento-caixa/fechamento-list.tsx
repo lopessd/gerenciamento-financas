@@ -55,7 +55,7 @@ const mockFechamentos = [
 ]
 
 const getStatusBadge = (status: string) => {
-  const variants = {
+  const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", className: string, label: string }> = {
     conciliado: { variant: "default" as const, className: "bg-green-100 text-green-700", label: "Conciliado" },
     pendente: { variant: "secondary" as const, className: "bg-orange-100 text-orange-700", label: "Pendente" },
     atrasado: { variant: "destructive" as const, className: "", label: "Atrasado" },

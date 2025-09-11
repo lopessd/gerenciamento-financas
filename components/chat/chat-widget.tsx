@@ -52,7 +52,7 @@ export default function ChatWidget() {
   }
 
   const getRoleBadge = (role: string) => {
-    const variants = {
+    const variants: Record<string, { className: string, label: string }> = {
       cliente: { className: "bg-blue-100 text-blue-700", label: "Cliente" },
       operador: { className: "bg-green-100 text-green-700", label: "Suporte" },
       admin: { className: "bg-purple-100 text-purple-700", label: "Admin" },
