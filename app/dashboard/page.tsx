@@ -75,8 +75,8 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-6">
         {/* Welcome section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Bem-vindo, {user.name}!</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo, {user.name}!</h1>
+          <p className="text-gray-200">
             {user.selectedCompany
               ? `Gerenciando: ${user.selectedCompany.name}`
               : "Selecione os módulos abaixo para começar"}
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         {/* Quick stats for admin/operator */}
         {user.role !== "cliente" && (
           <div className="mt-12">
-            <h2 className="text-xl font-semibold mb-4">Resumo do Dia</h2>
+            <h2 className="text-xl font-semibold mb-4 text-white">Resumo do Dia</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="border-0 shadow-md">
                 <CardContent className="p-4">

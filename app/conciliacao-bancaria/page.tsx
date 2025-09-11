@@ -21,8 +21,8 @@ export default function ConciliacaoBancariaPage() {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="shrink-0">
-            <ArrowLeft className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="shrink-0 text-white hover:bg-white/20">
+            <ArrowLeft className="h-5 w-5 text-white" />
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Conciliação Bancária</h1>
@@ -89,7 +89,7 @@ export default function ConciliacaoBancariaPage() {
 
         {/* Main Content - Made tabs responsive */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsList className="grid w-full grid-cols-3 h-auto gap-2">
             <TabsTrigger value="importacao" className="text-xs sm:text-sm px-2 py-2">
               <span className="hidden sm:inline">Importação F360</span>
               <span className="sm:hidden">Import.</span>

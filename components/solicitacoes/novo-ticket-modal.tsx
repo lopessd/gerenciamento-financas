@@ -24,7 +24,7 @@ export default function NovoTicketModal({ open, onOpenChange }: NovoTicketModalP
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 gap-2">
             <TabsTrigger value="formulario">Formulário</TabsTrigger>
             <TabsTrigger value="comentarios">Comentários</TabsTrigger>
           </TabsList>

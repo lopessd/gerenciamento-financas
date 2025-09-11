@@ -8,8 +8,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.646 0.222 141.116);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -120,4 +120,24 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Solução definitiva para posicionamento dos dropdowns */
+[data-radix-dropdown-menu-content],
+[role="menu"] {
+  position: fixed !important;
+  top: 70px !important;
+  right: 20px !important;
+  left: auto !important;
+  transform: none !important;
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* Ajuste para dropdown de notificações (primeiro) */
+[data-radix-dropdown-menu-content]:first-of-type {
+  right: 80px !important;
 }

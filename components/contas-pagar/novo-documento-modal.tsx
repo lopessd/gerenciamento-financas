@@ -113,7 +113,7 @@ export default function NovoDocumentoModal({ isOpen, onClose }: NovoDocumentoMod
 
         {step === "validation" && (
           <Tabs defaultValue="dados" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 gap-2">
               <TabsTrigger value="dados" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Dados Extraídos

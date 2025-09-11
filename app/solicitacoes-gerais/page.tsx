@@ -27,9 +27,9 @@ export default function SolicitacoesGeraisPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.push("/dashboard")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-white hover:bg-white/10"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 text-white" />
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-foreground">Solicitações Gerais</h1>
@@ -92,7 +92,7 @@ export default function SolicitacoesGeraisPage() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 gap-2">
             <TabsTrigger value="lista">Lista</TabsTrigger>
             <TabsTrigger value="kanban">Kanban</TabsTrigger>
           </TabsList>

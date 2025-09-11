@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, DollarSign } from "lucide-react"
@@ -27,15 +28,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-800 to-teal-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-3xl font-bold text-primary">
-            <DollarSign className="h-8 w-8" />
-            Full Ca$h
+          <div className="inline-flex items-center justify-center">
+            <img 
+              src="/fullcash-logo.png" 
+              alt="Full Ca$h" 
+              className="h-16 w-auto"
+            />
           </div>
-          <p className="text-muted-foreground mt-2">BPO Financeiro</p>
         </div>
 
         <Card className="shadow-lg border-0">
@@ -60,9 +63,8 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -78,13 +80,13 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
+              <Button type="submit" className="w-full h-12 text-base font-medium bg-green-500 hover:bg-green-600 text-white" disabled={isLoading}>
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <button className="text-primary hover:underline text-sm">Esqueceu sua senha?</button>
+              <button className="text-green-500 hover:underline text-sm">Esqueceu sua senha?</button>
             </div>
 
             {/* Demo credentials */}

@@ -89,9 +89,9 @@ export default function ChatPage() {
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="text-white hover:bg-white/20">
+              <ArrowLeft className="h-5 w-5 text-white" />
+            </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Chat de Suporte</h1>
             <p className="text-muted-foreground">Comunicação em tempo real com a equipe</p>

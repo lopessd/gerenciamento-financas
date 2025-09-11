@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Building2, DollarSign } from "lucide-react"
 
 export default function SelectCompanyPage() {
-  const { user, companies, selectCompany } = useAuth()
+  const { user, companies, selectCompany, logout } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -27,16 +27,19 @@ export default function SelectCompanyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-800 to-teal-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-3xl font-bold text-primary mb-2">
-            <DollarSign className="h-8 w-8" />
-            Full Ca$h
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/fullcash-logo.png" 
+              alt="Full Ca$h" 
+              className="h-16 w-auto"
+            />
           </div>
-          <h1 className="text-2xl font-semibold text-foreground">Selecione uma empresa</h1>
-          <p className="text-muted-foreground mt-2">Escolha a empresa que deseja gerenciar</p>
+          <h1 className="text-2xl font-semibold text-white">Selecione uma empresa</h1>
+          <p className="text-gray-200 mt-2">Escolha a empresa que deseja gerenciar</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -58,7 +61,7 @@ export default function SelectCompanyPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <Button className="w-full bg-transparent" variant="outline">
+                <Button className="w-full bg-green-500 hover:bg-green-600 text-white border-0">
                   Selecionar Empresa
                 </Button>
               </CardContent>
@@ -70,9 +73,10 @@ export default function SelectCompanyPage() {
           <Button
             variant="ghost"
             onClick={() => {
-              // logout logic would go here
+              logout()
               router.push("/")
             }}
+            className="text-white hover:bg-white/20 hover:text-white transition-all duration-200 px-6 py-2 rounded-md border border-white/30 hover:border-white/50"
           >
             Voltar ao login
           </Button>

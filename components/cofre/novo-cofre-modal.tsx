@@ -41,7 +41,7 @@ export default function NovoCofreModal({ isOpen, onClose }: NovoCofreModalProps)
         </DialogHeader>
 
         <Tabs defaultValue="formulario" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 gap-2">
             <TabsTrigger value="formulario" className="gap-2">
               <FileText className="h-4 w-4" />
               Formulário

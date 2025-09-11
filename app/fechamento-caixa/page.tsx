@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Calendar, List, BarChart3, ArrowLeft } from "lucide-react"
+import { Plus, Calendar, List, ArrowLeft } from "lucide-react"
 import FechamentoCalendar from "@/components/fechamento-caixa/fechamento-calendar"
 import FechamentoList from "@/components/fechamento-caixa/fechamento-list"
-import FechamentoDashboard from "@/components/fechamento-caixa/fechamento-dashboard"
 import NovoFechamentoModal from "@/components/fechamento-caixa/novo-fechamento-modal"
 import { useRouter } from "next/navigation"
 
@@ -24,12 +23,12 @@ export default function FechamentoCaixaPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")} className="text-white hover:bg-white/20">
+                    <ArrowLeft className="h-5 w-5 text-white" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Fechamento de Caixa</h1>
-              <p className="text-muted-foreground">Gestão de fechamentos diários</p>
+              <h1 className="text-3xl font-bold text-white">Fechamento de Caixa</h1>
+              <p className="text-gray-200">Gestão de fechamentos diários</p>
             </div>
           </div>
           <Button onClick={() => setIsModalOpen(true)} className="gap-2 bg-green-500 hover:bg-green-600 text-white">
@@ -61,7 +60,7 @@ export default function FechamentoCaixaPage() {
                   <p className="text-sm text-muted-foreground">Atrasados</p>
                   <p className="text-2xl font-bold text-red-500">3</p>
                 </div>
-                <Badge variant="destructive">Urgente</Badge>
+                <Badge className="bg-red-500 text-white hover:bg-red-600">Urgente</Badge>
               </div>
             </CardContent>
           </Card>
@@ -92,8 +91,8 @@ export default function FechamentoCaixaPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <TabsList className="grid w-full grid-cols-2 mb-6 gap-2">
             <TabsTrigger value="calendar" className="gap-2">
               <Calendar className="h-4 w-4" />
               Calendário
@@ -101,10 +100,6 @@ export default function FechamentoCaixaPage() {
             <TabsTrigger value="list" className="gap-2">
               <List className="h-4 w-4" />
               Lista
-            </TabsTrigger>
-            <TabsTrigger value="dashboard" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
             </TabsTrigger>
           </TabsList>
 
@@ -116,9 +111,6 @@ export default function FechamentoCaixaPage() {
             <FechamentoList />
           </TabsContent>
 
-          <TabsContent value="dashboard">
-            <FechamentoDashboard />
-          </TabsContent>
         </Tabs>
 
         {/* Modal */}

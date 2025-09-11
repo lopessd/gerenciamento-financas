@@ -12,14 +12,9 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { CustomDropdown, CustomDropdownItem, CustomDropdownSeparator } from "@/components/ui/custom-dropdown"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/contexts/auth-context"
 import { useChat } from "@/contexts/chat-context"
@@ -79,20 +74,45 @@ export default function Header() {
     }
   }
 
+  // Corrige o posicionamento dos dropdowns após montagem
+  useEffect(() => {
+    const fixDropdownPosition = () => {
+      const dropdowns = document.querySelectorAll('[data-radix-dropdown-menu-content]')
+      dropdowns.forEach((dropdown, index) => {
+        const element = dropdown as HTMLElement
+        element.style.position = 'fixed'
+        element.style.top = '60px'
+        element.style.right = index === 0 ? '80px' : '16px' // Primeiro dropdown (notificações) mais à esquerda
+        element.style.left = 'auto'
+        element.style.transform = 'none'
+        element.style.zIndex = '9999'
+      })
+    }
+
+    // Observer para detectar quando dropdowns são criados
+    const observer = new MutationObserver(fixDropdownPosition)
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 bg-gradient-to-r from-teal-800 to-teal-900 border-b border-teal-700 shadow-sm z-50">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <DollarSign className="h-8 w-8 text-green-500" />
-          <span className="text-2xl font-bold text-green-500">Full Ca$h</span>
+          <img 
+            src="/fullcash-logo.png" 
+            alt="Full Ca$h" 
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Right side actions */}
         <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+          <CustomDropdown
+            trigger={
+              <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20 hover:text-white">
                 <Bell className="h-5 w-5" />
                 {unreadNotifications > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500 text-white flex items-center justify-center">
@@ -100,41 +120,42 @@ export default function Header() {
                   </Badge>
                 )}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <div className="px-3 py-2">
-                <p className="text-sm font-medium">Notificações</p>
-                <p className="text-xs text-muted-foreground">{unreadNotifications} não lidas</p>
-              </div>
-              <DropdownMenuSeparator />
-              <div className="max-h-64 overflow-y-auto">
-                {notifications.map((notification) => (
-                  <DropdownMenuItem key={notification.id} className="flex items-start gap-3 p-3 cursor-pointer">
-                    {getNotificationIcon(notification.type)}
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p
-                          className={`text-sm font-medium ${!notification.read ? "text-foreground" : "text-muted-foreground"}`}
-                        >
-                          {notification.title}
-                        </p>
-                        {!notification.read && <div className="h-2 w-2 bg-green-500 rounded-full" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground">{notification.time}</p>
+            }
+            width={320}
+            className="w-80"
+          >
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium text-gray-900">Notificações</p>
+              <p className="text-xs text-gray-600">{unreadNotifications} não lidas</p>
+            </div>
+            <CustomDropdownSeparator />
+            <div className="max-h-64 overflow-y-auto">
+              {notifications.map((notification) => (
+                <CustomDropdownItem key={notification.id} className="flex items-start gap-3 p-3">
+                  {getNotificationIcon(notification.type)}
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p
+                        className={`text-sm font-medium ${!notification.read ? "text-gray-900" : "text-gray-600"}`}
+                      >
+                        {notification.title}
+                      </p>
+                      {!notification.read && <div className="h-2 w-2 bg-green-500 rounded-full" />}
                     </div>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-sm text-green-500">
-                Ver todas as notificações
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    <p className="text-xs text-gray-600">{notification.message}</p>
+                    <p className="text-xs text-gray-500">{notification.time}</p>
+                  </div>
+                </CustomDropdownItem>
+              ))}
+            </div>
+            <CustomDropdownSeparator />
+            <CustomDropdownItem className="justify-center text-sm text-green-500">
+              Ver todas as notificações
+            </CustomDropdownItem>
+          </CustomDropdown>
 
           {/* Chat */}
-          <Button variant="ghost" size="icon" className="relative" onClick={toggleChat}>
+          <Button variant="ghost" size="icon" className="relative text-white hover:bg-white/20 hover:text-white" onClick={toggleChat}>
             <MessageCircle className="h-5 w-5" />
             {unreadCount > 0 && (
               <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-green-500 flex items-center justify-center">
@@ -144,40 +165,41 @@ export default function Header() {
           </Button>
 
           {/* User menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+          <CustomDropdown
+            trigger={
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white">
                 <User className="h-5 w-5" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
-                {user?.selectedCompany && user.role === "cliente" && (
-                  <p className="text-xs text-muted-foreground mt-1">{user.selectedCompany.name}</p>
-                )}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Configurações
-              </DropdownMenuItem>
-              {user && (user.role === "operador" || user.role === "admin") && (
-                <>
-                  <DropdownMenuItem onClick={handleCompanySwitch}>
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Trocar Empresa
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
+            }
+            width={224}
+            className="w-56"
+          >
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+              <p className="text-xs text-gray-600">{user?.email}</p>
+              {user?.selectedCompany && user.role === "cliente" && (
+                <p className="text-xs text-gray-600 mt-1">{user.selectedCompany.name}</p>
               )}
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+            <CustomDropdownSeparator />
+            <CustomDropdownItem className="text-gray-900">
+              <Settings className="mr-2 h-4 w-4" />
+              Configurações
+            </CustomDropdownItem>
+            {user && (user.role === "operador" || user.role === "admin") && (
+              <>
+                <CustomDropdownItem onClick={handleCompanySwitch} className="text-gray-900">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Trocar Empresa
+                </CustomDropdownItem>
+                <CustomDropdownSeparator />
+              </>
+            )}
+            <CustomDropdownItem onClick={handleLogout} className="text-gray-900">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </CustomDropdownItem>
+          </CustomDropdown>
         </div>
       </div>
     </header>
