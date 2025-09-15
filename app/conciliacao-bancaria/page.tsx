@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import GenericSkeleton from "@/components/skeletons/generic-skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,6 +17,16 @@ export default function ConciliacaoBancariaPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("importacao")
+  const [dataLoaded, setDataLoaded] = useState(false)
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDataLoaded(true), 220)
+    return () => clearTimeout(timer)
+  }, [])
+  
+  if (!dataLoaded) {
+    return <GenericSkeleton title="Conciliação Bancária" showTabs={true} />
+  }
 
   return (
     <DashboardLayout>

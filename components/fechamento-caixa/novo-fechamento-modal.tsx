@@ -4,13 +4,12 @@ import type React from "react"
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
-import { Upload, FileText, MessageSquare } from "lucide-react"
+import { Upload } from "lucide-react"
 
 interface NovoFechamentoModalProps {
   isOpen: boolean
@@ -39,19 +38,7 @@ export default function NovoFechamentoModal({ isOpen, onClose }: NovoFechamentoM
           <DialogTitle>Novo Fechamento de Caixa</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="formulario" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 gap-2">
-            <TabsTrigger value="formulario" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Formulário
-            </TabsTrigger>
-            <TabsTrigger value="comentarios" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Comentários
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="formulario" className="space-y-4">
+        <div className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -120,25 +107,7 @@ export default function NovoFechamentoModal({ isOpen, onClose }: NovoFechamentoM
                 <Button type="submit">Enviar Fechamento</Button>
               </div>
             </form>
-          </TabsContent>
-
-          <TabsContent value="comentarios" className="space-y-4">
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Nenhum comentário ainda. Os comentários aparecerão aqui após o envio do fechamento.
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="novoComentario">Adicionar Comentário</Label>
-                <Textarea id="novoComentario" placeholder="Digite seu comentário..." rows={3} />
-              </div>
-
-              <Button variant="outline" className="w-full bg-transparent">
-                Adicionar Comentário
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   )

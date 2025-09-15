@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import DashboardSkeleton from "@/components/skeletons/dashboard-skeleton"
+import LoadingSpinner from "@/components/loading-spinner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calculator, Vault, CreditCard, HelpCircle, Building2 } from "lucide-react"
 
@@ -48,26 +50,35 @@ const modules = [
 export default function DashboardPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const [pageLoaded, setPageLoaded] = useState(false)
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/")
+      return
     }
     if (user && user.role !== "cliente" && !user.selectedCompany) {
       router.push("/select-company")
+      return
     }
+    
+    // Simulate loading delay for demonstration
+    const timer = setTimeout(() => {
+      setPageLoaded(true)
+    }, 300)
+    
+    return () => clearTimeout(timer)
   }, [user, isLoading, router])
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+  const handleCardClick = (href: string, moduleId: string) => {
+    setNavigatingTo(moduleId)
+    router.prefetch(href)
+    router.push(href)
   }
 
-  if (!user) {
-    return null
+  if (isLoading || !user || !pageLoaded) {
+    return <DashboardSkeleton />
   }
 
   return (
@@ -91,7 +102,8 @@ export default function DashboardPage() {
               <Card
                 key={module.id}
                 className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 border-0 shadow-md group bg-white hover:bg-green-50"
-                onClick={() => router.push(module.href)}
+                onClick={() => handleCardClick(module.href, module.id)}
+                onMouseEnter={() => router.prefetch(module.href)}
               >
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center space-y-4">
@@ -150,6 +162,13 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Full page loading overlay */}
+      {navigatingTo && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <LoadingSpinner size="lg" text="Carregando..." />
+        </div>
+      )}
     </DashboardLayout>
   )
 }

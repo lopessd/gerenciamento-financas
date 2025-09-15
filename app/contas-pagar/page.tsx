@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import GenericSkeleton from "@/components/skeletons/generic-skeleton"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,7 +17,17 @@ import { useRouter } from "next/navigation"
 export default function ContasPagarPage() {
   const [activeTab, setActiveTab] = useState("processamento")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const router = useRouter()
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDataLoaded(true), 250)
+    return () => clearTimeout(timer)
+  }, [])
+  
+  if (!dataLoaded) {
+    return <GenericSkeleton title="Contas a Pagar" showTabs={true} />
+  }
 
   return (
     <DashboardLayout>

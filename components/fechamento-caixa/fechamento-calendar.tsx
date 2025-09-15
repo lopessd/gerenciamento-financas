@@ -4,12 +4,13 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import DayViewModal from "./day-view-modal"
 
 const statusColors = {
-  conciliado: "bg-green-500",
-  pendente: "bg-orange-500",
-  atrasado: "bg-red-500",
-  sem_envio: "bg-gray-300",
+  conciliado: "border-l-green-500 bg-green-100/60",
+  pendente: "border-l-orange-500 bg-orange-100/60", 
+  atrasado: "border-l-red-500 bg-red-100/60",
+  sem_envio: "border-l-gray-400 bg-gray-100/60",
 }
 
 const mockData: Record<string, { status: keyof typeof statusColors; empresa: string }> = {
@@ -22,6 +23,8 @@ const mockData: Record<string, { status: keyof typeof statusColors; empresa: str
 
 export default function FechamentoCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 0, 1)) // Janeiro 2025
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isDayModalOpen, setIsDayModalOpen] = useState(false)
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -82,10 +85,10 @@ export default function FechamentoCalendar() {
   const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
   return (
-    <Card className="border-0 shadow-lg bg-white/95 backdrop-blur-sm">
-      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+    <Card className="border-0 shadow-md bg-white">
+      <CardHeader className="bg-white border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl text-green-800">
+          <CardTitle className="text-xl text-gray-900">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </CardTitle>
           <div className="flex gap-2">
@@ -93,7 +96,7 @@ export default function FechamentoCalendar() {
               variant="outline" 
               size="icon" 
               onClick={() => navigateMonth("prev")}
-              className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-colors"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -101,7 +104,7 @@ export default function FechamentoCalendar() {
               variant="outline" 
               size="icon" 
               onClick={() => navigateMonth("next")}
-              className="border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-colors"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -129,15 +132,18 @@ export default function FechamentoCalendar() {
             return (
               <div
                 key={day}
-                className="relative p-2 min-h-[80px] border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-200 cursor-pointer transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                className={`relative p-2 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${
+                  dayData 
+                    ? `${statusColors[dayData.status]} hover:shadow-md` 
+                    : "bg-white border-l-transparent hover:bg-gray-50"
+                }`}
+                onClick={() => {
+                  const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                  setSelectedDate(clickedDate)
+                  setIsDayModalOpen(true)
+                }}
               >
-                <div className="text-sm font-medium mb-1">{day}</div>
-                {dayData && (
-                  <div className="space-y-1">
-                    <div className={`w-3 h-3 rounded-full ${statusColors[dayData.status]}`} />
-                    <div className="text-xs text-muted-foreground truncate">{dayData.empresa}</div>
-                  </div>
-                )}
+                <div className="text-sm font-medium">{day}</div>
               </div>
             )
           })}
@@ -163,6 +169,16 @@ export default function FechamentoCalendar() {
           </div>
         </div>
       </CardContent>
+      
+      {/* Day View Modal */}
+      {selectedDate && (
+        <DayViewModal
+          isOpen={isDayModalOpen}
+          onClose={() => setIsDayModalOpen(false)}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
+      )}
     </Card>
   )
 }

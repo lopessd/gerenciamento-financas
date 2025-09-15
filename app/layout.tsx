@@ -33,7 +33,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} overflow-x-hidden`}>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-800 to-teal-900">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white text-sm">Carregando...</p>
+            </div>
+          </div>
+        }>
           <AuthProvider>
             <ChatProvider>{children}</ChatProvider>
           </AuthProvider>

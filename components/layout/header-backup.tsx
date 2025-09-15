@@ -212,7 +212,6 @@ export default function Header() {
           </CustomDropdown>
         </div>
       </div>
-      </div>
     </header>
   )
 }

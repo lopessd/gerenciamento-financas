@@ -10,12 +10,15 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && user) {
-      if (user.role === "cliente" || user.selectedCompany) {
-        router.push("/dashboard")
-      } else {
-        router.push("/select-company")
-      }
+    if (isLoading) return
+    
+    if (user) {
+      const destination = (user.role === "cliente" || user.selectedCompany) 
+        ? "/dashboard" 
+        : "/select-company"
+      
+      router.prefetch(destination)
+      router.push(destination)
     }
   }, [user, isLoading, router])
 

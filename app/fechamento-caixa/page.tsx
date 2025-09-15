@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import GenericSkeleton from "@/components/skeletons/generic-skeleton"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,9 +15,20 @@ import NovoFechamentoModal from "@/components/fechamento-caixa/novo-fechamento-m
 import { useRouter } from "next/navigation"
 
 export default function FechamentoCaixaPage() {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("calendar")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const router = useRouter()
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDataLoaded(true), 200)
+    return () => clearTimeout(timer)
+  }, [])
+  
+  if (!dataLoaded) {
+    return <GenericSkeleton title="Fechamento de Caixa" showTabs={true} showTable={false} />
+  }
 
   return (
     <DashboardLayout>
@@ -28,13 +41,20 @@ export default function FechamentoCaixaPage() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white">Fechamento de Caixa</h1>
-              <p className="text-gray-200">Gestão de fechamentos diários</p>
+              <p className="text-gray-200">
+                {user?.role === "cliente" 
+                  ? "Registre seu fechamento diário de caixa" 
+                  : "Visualize e aprove os fechamentos dos clientes"
+                }
+              </p>
             </div>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="gap-2 bg-green-500 hover:bg-green-600 text-white">
-            <Plus className="h-4 w-4" />
-            Novo Fechamento
-          </Button>
+          {user?.role === "cliente" && (
+            <Button onClick={() => setIsModalOpen(true)} className="gap-2 bg-green-500 hover:bg-green-600 text-white">
+              <Plus className="h-4 w-4" />
+              Novo Fechamento
+            </Button>
+          )}
         </div>
 
         {/* Stats Cards */}

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, type ReactNode } from "react"
 
 interface User {
   id: string
@@ -49,65 +49,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored auth data
-    const storedUser = localStorage.getItem("fullcash-user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    let isMounted = true
+    
+    const loadAuthData = async () => {
+      try {
+        const storedUser = localStorage.getItem("fullcash-user")
+        if (storedUser && isMounted) {
+          setUser(JSON.parse(storedUser))
+        }
+      } catch (error) {
+        console.error('Error loading auth data:', error)
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
     }
-    setIsLoading(false)
+    
+    loadAuthData()
+    
+    return () => {
+      isMounted = false
+    }
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-    const foundUser = mockUsers.find((u) => u.email === email)
-    if (foundUser && password === "123456") {
-      setUser(foundUser)
-      localStorage.setItem("fullcash-user", JSON.stringify(foundUser))
+      const foundUser = mockUsers.find((u) => u.email === email)
+      if (foundUser && password === "123456") {
+        setUser(foundUser)
+        localStorage.setItem("fullcash-user", JSON.stringify(foundUser))
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Login error:', error)
+      return false
+    } finally {
       setIsLoading(false)
-      return true
     }
+  }, [])
 
-    setIsLoading(false)
-    return false
-  }
-
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem("fullcash-user")
-  }
+  }, [])
 
-  const selectCompany = (company: Company) => {
+  const selectCompany = useCallback((company: Company) => {
     if (user) {
       const updatedUser = { ...user, selectedCompany: company }
       setUser(updatedUser)
       localStorage.setItem("fullcash-user", JSON.stringify(updatedUser))
     }
-  }
+  }, [user])
 
-  const switchCompany = (company: Company) => {
+  const switchCompany = useCallback((company: Company) => {
     if (user && (user.role === "operador" || user.role === "admin")) {
       const updatedUser = { ...user, selectedCompany: company }
       setUser(updatedUser)
       localStorage.setItem("fullcash-user", JSON.stringify(updatedUser))
     }
-  }
+  }, [user])
+
+  const value = useMemo(
+    () => ({
+      user,
+      companies,
+      login,
+      logout,
+      selectCompany,
+      switchCompany,
+      isLoading,
+    }),
+    [user, companies, isLoading]
+  )
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        companies,
-        login,
-        logout,
-        selectCompany,
-        switchCompany,
-        isLoading,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

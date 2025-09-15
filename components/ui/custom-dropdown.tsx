@@ -21,7 +21,7 @@ export function CustomDropdown({
   width = 320
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [position, setPosition] = useState({ top: -9999, left: -9999 }) // Posição inicial fora da tela
   const triggerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -29,22 +29,33 @@ export function CustomDropdown({
     if (!triggerRef.current) return
 
     const triggerRect = triggerRef.current.getBoundingClientRect()
-    const scrollY = window.scrollY
-    const scrollX = window.scrollX
-
-    let top = triggerRect.bottom + scrollY + 8
-    let left = triggerRect.left + scrollX
+    
+    // Use viewport-relative positioning with fixed positioning
+    let top = triggerRect.bottom + 8
+    let left = triggerRect.left
 
     // Ajuste para alinhamento
     if (align === 'end') {
-      left = triggerRect.right + scrollX - width // usar largura passada como prop
+      left = triggerRect.right - width
     } else if (align === 'center') {
-      left = triggerRect.left + scrollX + (triggerRect.width / 2) - (width / 2)
+      left = triggerRect.left + (triggerRect.width / 2) - (width / 2)
     }
 
-    // Ajuste para lado
-    if (side === 'top') {
-      top = triggerRect.top + scrollY - 8
+    // Verificar se o dropdown sai da tela à direita
+    const viewportWidth = window.innerWidth
+    if (left + width > viewportWidth) {
+      left = viewportWidth - width - 16
+    }
+
+    // Verificar se o dropdown sai da tela à esquerda
+    if (left < 16) {
+      left = 16
+    }
+
+    // Ajuste para lado e verificar se sai da tela na parte inferior
+    const viewportHeight = window.innerHeight
+    if (side === 'top' || (side === 'bottom' && top + 200 > viewportHeight)) {
+      top = triggerRect.top - 8
     }
 
     setPosition({ top, left })
@@ -52,20 +63,24 @@ export function CustomDropdown({
 
   useEffect(() => {
     if (isOpen) {
-      calculatePosition()
+      // Usar requestAnimationFrame para garantir que a posição seja calculada na próxima frame
+      const frame = requestAnimationFrame(() => {
+        calculatePosition()
+      })
       
       const handleResize = () => calculatePosition()
       const handleScroll = () => calculatePosition()
       
       window.addEventListener('resize', handleResize)
-      window.addEventListener('scroll', handleScroll)
+      window.addEventListener('scroll', handleScroll, true)
       
       return () => {
+        cancelAnimationFrame(frame)
         window.removeEventListener('resize', handleResize)
-        window.removeEventListener('scroll', handleScroll)
+        window.removeEventListener('scroll', handleScroll, true)
       }
     }
-  }, [isOpen])
+  }, [isOpen, width, align, side])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -99,22 +114,31 @@ export function CustomDropdown({
   const content = isOpen ? (
     <div
       ref={contentRef}
-      className={`fixed z-[9999] bg-white border border-gray-200 rounded-md shadow-lg ${className}`}
+      className={`fixed z-[9999] bg-white border border-gray-200 rounded-md shadow-lg transition-none ${className}`}
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        minWidth: '200px'
+        width: `${width}px`,
+        opacity: position.top === -9999 ? 0 : 1 // Esconder até a posição ser calculada
       }}
     >
       {children}
     </div>
   ) : null
 
+  const handleToggle = () => {
+    if (!isOpen) {
+      // Calcular posição ANTES de abrir o dropdown
+      calculatePosition()
+    }
+    setIsOpen(!isOpen)
+  }
+
   return (
     <>
       <div
         ref={triggerRef}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="cursor-pointer"
       >
         {trigger}

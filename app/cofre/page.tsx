@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import CofreSkeleton from "@/components/skeletons/cofre-skeleton"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,7 +17,29 @@ import { useRouter } from "next/navigation"
 export default function CofrePage() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  const [statsData, setStatsData] = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    // Simulate data loading
+    const loadData = async () => {
+      await new Promise(resolve => setTimeout(resolve, 200))
+      setStatsData({
+        saldoInicial: 15450,
+        saldoConferido: 14890,
+        quebra: 560,
+        pendentes: 5
+      })
+      setDataLoaded(true)
+    }
+    
+    loadData()
+  }, [])
+  
+  if (!dataLoaded) {
+    return <CofreSkeleton />
+  }
 
   return (
     <DashboardLayout>

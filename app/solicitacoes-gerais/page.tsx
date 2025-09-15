@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import DashboardLayout from "@/components/layout/dashboard-layout"
+import GenericSkeleton from "@/components/skeletons/generic-skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -17,6 +18,16 @@ export default function SolicitacoesGeraisPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("lista")
   const [showNovoTicket, setShowNovoTicket] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDataLoaded(true), 150)
+    return () => clearTimeout(timer)
+  }, [])
+  
+  if (!dataLoaded) {
+    return <GenericSkeleton title="Solicitações Gerais" showStats={false} showTable={false} />
+  }
 
   return (
     <DashboardLayout>

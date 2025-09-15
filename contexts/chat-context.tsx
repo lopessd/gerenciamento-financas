@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useMemo, useCallback, type ReactNode } from "react"
 import { useAuth } from "./auth-context"
 
 interface Message {
@@ -71,7 +71,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const { user } = useAuth()
 
-  const sendMessage = (content: string, type: "text" | "file" = "text", fileName?: string) => {
+  const sendMessage = useCallback((content: string, type: "text" | "file" = "text", fileName?: string) => {
     if (!user || !content.trim()) return
 
     const newMessage: Message = {
@@ -89,7 +89,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     // Simulate response from operator (for demo purposes)
     if (user.role === "cliente") {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const responseMessage: Message = {
           id: (Date.now() + 1).toString(),
           senderId: "operador1",
@@ -103,35 +103,40 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (!isOpen) {
           setUnreadCount((prev) => prev + 1)
         }
-      }, 2000)
+      }, 1500)
+      
+      return () => clearTimeout(timeoutId)
     }
-  }
+  }, [user, isOpen])
 
-  const markAsRead = () => {
+  const markAsRead = useCallback(() => {
     setUnreadCount(0)
-  }
+  }, [])
 
-  const toggleChat = () => {
+  const toggleChat = useCallback(() => {
     setIsOpen((prev) => {
       const newState = !prev
       if (newState) {
-        markAsRead()
+        setUnreadCount(0)
       }
       return newState
     })
-  }
+  }, [])
+
+  const value = useMemo(
+    () => ({
+      messages,
+      unreadCount,
+      isOpen,
+      sendMessage,
+      markAsRead,
+      toggleChat,
+    }),
+    [messages, unreadCount, isOpen]
+  )
 
   return (
-    <ChatContext.Provider
-      value={{
-        messages,
-        unreadCount,
-        isOpen,
-        sendMessage,
-        markAsRead,
-        toggleChat,
-      }}
-    >
+    <ChatContext.Provider value={value}>
       {children}
     </ChatContext.Provider>
   )
