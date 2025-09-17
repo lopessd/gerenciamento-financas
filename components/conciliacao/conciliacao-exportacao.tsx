@@ -118,7 +118,7 @@ export default function ConciliacaoExportacao() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(exportacao.status)}>{exportacao.status}</Badge>
+                  <Badge variant="status" className={getStatusColor(exportacao.status)}>{exportacao.status}</Badge>
                   {exportacao.status === "concluido" && (
                     <Button variant="outline" size="sm">
                       <Download className="h-4 w-4 mr-2" />

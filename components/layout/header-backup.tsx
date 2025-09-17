@@ -158,10 +158,10 @@ export default function Header() {
                 </CustomDropdownItem>
               ))}
             </div>
-            <CustomDropdownSeparator />
-            <CustomDropdownItem className="justify-center text-sm text-green-500">
-              Ver todas as notificações
-            </CustomDropdownItem>
+              <CustomDropdownSeparator />
+              <CustomDropdownItem className="justify-center text-sm text-green-500">
+                Ver todas as notificações
+              </CustomDropdownItem>
           </CustomDropdown>
 
           {/* Chat */}
@@ -212,6 +212,7 @@ export default function Header() {
           </CustomDropdown>
         </div>
       </div>
+    </div>
     </header>
   )
 }

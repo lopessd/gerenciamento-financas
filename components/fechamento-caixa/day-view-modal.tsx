@@ -67,7 +67,7 @@ const getStatusBadge = (status: string) => {
 
   const config = variants[status as keyof typeof variants] || variants.sem_envio
   return (
-    <Badge className={config.className}>
+    <Badge variant="status" className={config.className}>
       {config.label}
     </Badge>
   )

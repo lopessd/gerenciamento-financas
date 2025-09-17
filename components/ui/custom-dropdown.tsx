@@ -157,10 +157,24 @@ export function CustomDropdownItem({
   onClick?: () => void
   className?: string 
 }) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onClick?.()
+    // Forçar o fechamento do dropdown após o click
+    setTimeout(() => {
+      document.dispatchEvent(new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 0,
+        clientY: 0,
+      }))
+    }, 0)
+  }
+
   return (
     <div 
       className={`px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer flex items-center ${className}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       {children}
     </div>

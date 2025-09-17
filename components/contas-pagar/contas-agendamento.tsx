@@ -81,9 +81,9 @@ const getStatusBadge = (status: string) => {
     },
   }
 
-  const config = variants[status] || variants.agendado
+  const config = variants[status as keyof typeof variants] || variants.agendado
   return (
-    <Badge variant={config.variant} className={`${config.className} gap-1`}>
+    <Badge variant="status" className={`${config.className} gap-1`}>
       {config.icon}
       {config.label}
     </Badge>
@@ -97,7 +97,7 @@ const getPrioridadeBadge = (prioridade: string) => {
     baixa: { className: "bg-green-100 text-green-700", label: "Baixa" },
   }
 
-  const config = variants[prioridade] || variants.normal
+  const config = variants[prioridade as keyof typeof variants] || variants.normal
   return (
     <Badge variant="outline" className={config.className}>
       {config.label}

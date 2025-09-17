@@ -9,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 import FechamentoCard from "./fechamento-card"
 
+interface FechamentoListProps {
+  onViewFechamento?: (fechamento: any) => void
+}
+
 // Mock data expandido para demonstração de paginação
 const mockFechamentos = [
   { id: 1, empresa: "Supermercado ABC", data: "2025-01-20", valor: "R$ 15.450,00", status: "pendente", responsavel: "João Silva", comentarios: 2 },
@@ -46,7 +50,7 @@ const dateRangeOptions = [
 ]
 
 
-export default function FechamentoList() {
+export default function FechamentoList({ onViewFechamento }: FechamentoListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -108,57 +112,59 @@ export default function FechamentoList() {
   
   return (
     <Card className="border-0 shadow-md">
-      <CardHeader>
-        <div className="flex flex-col space-y-4">
+      <CardHeader className="p-3 sm:p-6">
+        <div className="flex flex-col space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              Lista de Fechamentos
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <span className="hidden sm:inline">Lista de Fechamentos</span>
+              <span className="sm:hidden">Fechamentos</span>
               <Badge variant="outline" className="text-xs">
-                {filteredFechamentos.length} {filteredFechamentos.length === 1 ? 'item' : 'itens'}
+                {filteredFechamentos.length}
               </Badge>
             </CardTitle>
           </div>
-          
+
           {/* Filtros */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="space-y-3">
             {/* Busca */}
-            <div className="relative flex-1">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar empresa ou responsável..." 
-                className="pl-10" 
+              <Input
+                placeholder="Buscar empresa..."
+                className="pl-10 text-sm h-9 sm:h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            {/* Filtro por Status */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Filtro por Data */}
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtrar por data" />
-              </SelectTrigger>
-              <SelectContent>
-                {dateRangeOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            {/* Filtros em linha */}
+            <div className="flex flex-col xs:grid xs:grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto sm:min-w-[120px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto sm:min-w-[120px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dateRangeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -187,10 +193,10 @@ export default function FechamentoList() {
           <>
             <div className="space-y-4">
               {paginatedFechamentos.map((fechamento) => (
-                <FechamentoCard 
-                  key={fechamento.id} 
+                <FechamentoCard
+                  key={fechamento.id}
                   fechamento={fechamento}
-                  onView={(f) => console.log('Visualizar:', f)}
+                  onView={onViewFechamento}
                   onApprove={(f) => console.log('Aprovar:', f)}
                   onRequestCorrection={(f) => console.log('Solicitar correção:', f)}
                   onViewComments={(f) => console.log('Ver comentários:', f)}
@@ -200,44 +206,59 @@ export default function FechamentoList() {
             
             {/* Paginação */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-6 border-t">
-                <div className="text-sm text-muted-foreground">
-                  Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredFechamentos.length)} de {filteredFechamentos.length} itens
+              <div className="pt-4 sm:pt-6 border-t space-y-3">
+                <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                  {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredFechamentos.length)} de {filteredFechamentos.length}
                 </div>
-                
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center justify-center gap-1 sm:gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
+                    className="h-8 px-2 sm:px-3"
                   >
-                    <ChevronLeft className="h-4 w-4" />
-                    Anterior
+                    <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Anterior</span>
                   </Button>
-                  
+
                   <div className="flex gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let page;
+                      if (totalPages <= 5) {
+                        page = i + 1;
+                      } else if (currentPage <= 3) {
+                        page = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        page = totalPages - 4 + i;
+                      } else {
+                        page = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          className="w-7 h-7 sm:w-8 sm:h-8 p-0 text-xs sm:text-sm"
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
+                    className="h-8 px-2 sm:px-3"
                   >
-                    Próximo
-                    <ChevronRight className="h-4 w-4" />
+                    <span className="hidden sm:inline">Próximo</span>
+                    <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>

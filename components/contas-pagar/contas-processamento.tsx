@@ -77,10 +77,10 @@ const getStatusBadge = (status: string, confianca: number) => {
     },
   }
 
-  const config = variants[status] || variants.ia_processando
+  const config = variants[status as keyof typeof variants] || variants.ia_processando
   return (
     <div className="flex flex-col gap-1">
-      <Badge variant={config.variant} className={`${config.className} gap-1`}>
+      <Badge variant="status" className={`${config.className} gap-1`}>
         {config.icon}
         {config.label}
       </Badge>

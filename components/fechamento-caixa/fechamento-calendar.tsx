@@ -86,44 +86,46 @@ export default function FechamentoCalendar() {
 
   return (
     <Card className="border-0 shadow-md bg-white">
-      <CardHeader className="bg-white border-b border-gray-200">
+      <CardHeader className="bg-white border-b border-gray-200 p-3 sm:p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl text-gray-900">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          <CardTitle className="text-lg sm:text-xl text-gray-900">
+            <span className="hidden sm:inline">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+            <span className="sm:hidden">{monthNames[currentDate.getMonth()].substring(0, 3)} {currentDate.getFullYear()}</span>
           </CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
+          <div className="flex gap-1 sm:gap-2">
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => navigateMonth("prev")}
-              className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+              className="h-7 w-7 sm:h-9 sm:w-9 border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => navigateMonth("next")}
-              className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+              className="h-7 w-7 sm:h-9 sm:w-9 border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-7 gap-2 mb-4">
+      <CardContent className="p-3 sm:p-6">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-4">
           {dayNames.map((day) => (
-            <div key={day} className="text-center text-sm font-semibold text-green-700 p-2 bg-green-50/50 rounded">
-              {day}
+            <div key={day} className="text-center text-xs sm:text-sm font-semibold text-green-700 p-1 sm:p-2 bg-green-50/50 rounded">
+              <span className="hidden sm:inline">{day}</span>
+              <span className="sm:hidden">{day.substring(0, 1)}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {getDaysInMonth(currentDate).map((day, index) => {
             if (!day) {
-              return <div key={index} className="p-2" />
+              return <div key={index} className="p-1 sm:p-2" />
             }
 
             const dateKey = formatDateKey(day)
@@ -132,9 +134,9 @@ export default function FechamentoCalendar() {
             return (
               <div
                 key={day}
-                className={`relative p-2 min-h-[80px] border border-gray-200 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${
-                  dayData 
-                    ? `${statusColors[dayData.status]} hover:shadow-md` 
+                className={`relative p-1 sm:p-2 min-h-[50px] sm:min-h-[80px] border border-gray-200 rounded cursor-pointer transition-all duration-200 border-l-2 sm:border-l-4 ${
+                  dayData
+                    ? `${statusColors[dayData.status]} hover:shadow-md`
                     : "bg-white border-l-transparent hover:bg-gray-50"
                 }`}
                 onClick={() => {
@@ -143,29 +145,29 @@ export default function FechamentoCalendar() {
                   setIsDayModalOpen(true)
                 }}
               >
-                <div className="text-sm font-medium">{day}</div>
+                <div className="text-xs sm:text-sm font-medium">{day}</div>
               </div>
             )
           })}
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-green-100">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm" />
-            <span className="text-sm text-green-700 font-medium">Conciliado</span>
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-green-100">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500 shadow-sm flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-green-700 font-medium">Conciliado</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm" />
-            <span className="text-sm text-orange-700 font-medium">Pendente</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-orange-500 shadow-sm flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-orange-700 font-medium">Pendente</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm" />
-            <span className="text-sm text-red-700 font-medium">Atrasado</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 shadow-sm flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-red-700 font-medium">Atrasado</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gray-400 shadow-sm" />
-            <span className="text-sm text-gray-600 font-medium">Sem Envio</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-400 shadow-sm flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-gray-600 font-medium">Sem Envio</span>
           </div>
         </div>
       </CardContent>

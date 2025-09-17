@@ -95,7 +95,7 @@ export default function ConciliacaoConferencia() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-muted-foreground">{lancamento.data}</span>
-                    <Badge className={getStatusColor(lancamento.status)}>{lancamento.status}</Badge>
+                    <Badge variant="status" className={getStatusColor(lancamento.status)}>{lancamento.status}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-lg font-bold ${lancamento.valor > 0 ? "text-green-600" : "text-red-600"}`}>

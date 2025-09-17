@@ -77,9 +77,9 @@ const getStatusBadge = (status: string) => {
     atrasado: { variant: "destructive" as const, className: "", label: "Atrasado" },
   }
 
-  const config = variants[status] || variants.pendente
+  const config = variants[status as keyof typeof variants] || variants.pendente
   return (
-    <Badge variant={config.variant} className={config.className}>
+    <Badge variant="status" className={config.className}>
       {config.label}
     </Badge>
   )

@@ -135,7 +135,7 @@ export default function ConciliacaoImportacao() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(importacao.status)}>{importacao.status}</Badge>
+                  <Badge variant="status" className={getStatusColor(importacao.status)}>{importacao.status}</Badge>
                   <Button variant="outline" size="sm">
                     Ver Detalhes
                   </Button>

@@ -128,7 +128,7 @@ export default function SolicitacoesLista() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-primary">{ticket.id}</span>
                     <Badge className={getPrioridadeColor(ticket.prioridade)}>{ticket.prioridade}</Badge>
-                    <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
+                    <Badge variant="status" className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
