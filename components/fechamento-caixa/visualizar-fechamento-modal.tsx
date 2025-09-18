@@ -663,16 +663,20 @@ export default function VisualizarFechamentoModal({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
-          className="w-[98vw] sm:w-[95vw] md:w-[90vw] lg:w-[90vw] xl:w-[85vw] 2xl:w-[80vw] max-w-[1100px] h-[90vh] sm:h-[85vh] max-h-[750px] flex flex-col p-0 gap-0 !rounded-xl !border-0 shadow-2xl"
+          className="
+            max-sm:w-screen max-sm:h-screen max-sm:max-w-none max-sm:max-h-none max-sm:rounded-none
+            sm:w-[95vw] sm:h-[90vh]
+            md:w-[90vw] md:h-[85vh]
+            lg:w-[90vw] lg:h-[85vh]
+            xl:w-[85vw] xl:h-[80vh]
+            2xl:w-[80vw] 2xl:h-[75vh]
+            sm:max-w-[1100px] sm:max-h-[750px] sm:rounded-xl
+            flex flex-col p-0 gap-0 border-0 shadow-2xl
+          "
           showCloseButton={false}
-          style={{
-            width: "min(98vw, 1100px)",
-            maxWidth: "1100px",
-            height: "min(90vh, 750px)",
-            maxHeight: "750px"
-          }}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
-      <DialogHeader className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-gradient-to-r from-green-600 to-green-700 shrink-0 rounded-t-xl">
+      <DialogHeader className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-gradient-to-r from-green-600 to-green-700 shrink-0 sm:rounded-t-xl">
         <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
                 <DialogTitle className="text-white text-lg sm:text-xl font-semibold">
@@ -698,22 +702,22 @@ export default function VisualizarFechamentoModal({
             {/* Layout Desktop - Duas Colunas */}
             <div className="hidden lg:flex h-full">
               {/* Área de detalhes com scroll interno */}
-              <div className="flex-1 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
                   {renderDetalhes()}
                 </div>
               </div>
-              
+
               {/* Área de comentários com layout fixo */}
-              <div className="flex-1 border-l bg-gray-50 flex flex-col min-w-0 max-w-[50%]">
-                {/* Header fixo do chat (mais fino) */}
-                <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 border-b bg-white">
+              <div className="w-1/2 border-l bg-gray-50 flex flex-col min-w-0 max-w-[50%]">
+                {/* Header fixo do chat */}
+                <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b bg-white">
                   <MessageSquare className="h-4 w-4 text-green-600" />
-                  <h3 className="font-semibold text-base pl-1">Chat</h3>
+                  <h3 className="font-semibold text-base text-gray-800">Chat</h3>
                 </div>
-                
-                {/* Container do chat com altura definida */}
-                <div className="flex-1 flex flex-col min-h-[400px] max-h-full overflow-hidden">
+
+                {/* Container do chat - ocupa todo o espaço restante */}
+                <div className="flex-1 flex flex-col overflow-hidden">
                   {renderComentarios()}
                 </div>
               </div>
@@ -721,29 +725,40 @@ export default function VisualizarFechamentoModal({
 
             {/* Layout Mobile - Abas */}
             <div className="lg:hidden h-full flex flex-col">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col h-full">
                 {/* Tabs fixas no topo */}
-                <div className="flex-shrink-0">
-                  <TabsList className="grid w-full grid-cols-2 mx-2 sm:mx-4 mb-0">
-                    <TabsTrigger value="detalhes" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                <div className="flex-shrink-0 bg-white border-b">
+                  <TabsList className="grid w-full grid-cols-2 m-0 h-12 bg-transparent border-0 rounded-none">
+                    <TabsTrigger
+                      value="detalhes"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm h-full rounded-none border-b-2 border-transparent data-[state=active]:border-green-600 data-[state=active]:bg-transparent data-[state=active]:text-green-600 hover:bg-gray-50"
+                    >
                       <Receipt className="h-3 w-3 sm:h-4 sm:w-4" />
                       Detalhes
                     </TabsTrigger>
-                    <TabsTrigger value="comentarios" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <TabsTrigger
+                      value="comentarios"
+                      className="gap-1 sm:gap-2 text-xs sm:text-sm h-full rounded-none border-b-2 border-transparent data-[state=active]:border-green-600 data-[state=active]:bg-transparent data-[state=active]:text-green-600 hover:bg-gray-50"
+                    >
                       <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
                       Chat
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                {/* Conteúdo das abas com altura fixa */}
-                <div className="flex-1 min-h-[400px] overflow-hidden">
-                  <TabsContent value="detalhes" className="h-full overflow-y-auto p-2 sm:p-4 m-0">
-                    {renderDetalhes()}
+                {/* Conteúdo das abas - ocupam todo o espaço restante */}
+                <div className="flex-1 overflow-hidden relative">
+                  <TabsContent value="detalhes" className="absolute inset-0 m-0 data-[state=inactive]:hidden">
+                    <div className="h-full overflow-y-auto p-3 sm:p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 -webkit-overflow-scrolling-touch">
+                      {renderDetalhes()}
+                    </div>
                   </TabsContent>
 
-                  <TabsContent value="comentarios" className="h-full m-0 flex flex-col">
-                    {renderComentarios()}
+                  <TabsContent value="comentarios" className="absolute inset-0 m-0 flex flex-col data-[state=inactive]:hidden">
+                    {/* Área do chat ocupando toda a altura */}
+                    <div className="flex-1 overflow-hidden">
+                      {renderComentarios()}
+                    </div>
                   </TabsContent>
                 </div>
               </Tabs>
@@ -751,7 +766,7 @@ export default function VisualizarFechamentoModal({
           </div>
 
           {/* Rodapé */}
-          <div className="shrink-0 px-3 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 rounded-b-xl">
+          <div className="shrink-0 px-3 sm:px-6 py-2 sm:py-4 border-t bg-gray-50 sm:rounded-b-xl">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
               <Button variant="outline" onClick={onClose} className="order-2 sm:order-1 w-full sm:w-auto">
                 Fechar

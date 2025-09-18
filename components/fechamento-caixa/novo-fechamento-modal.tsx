@@ -129,6 +129,18 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
     }).format(valor)
   }
 
+  const formatarMoedaCompacta = (valor: number): string => {
+    if (Math.abs(valor) >= 1000000) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(valor)
+    }
+    return formatarMoeda(valor)
+  }
+
   const parseMoeda = (valor: string): number => {
     const numericValue = valor.replace(/[^\d,]/g, '').replace(',', '.')
     return parseFloat(numericValue) || 0
@@ -383,8 +395,8 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                       <Label className="text-sm font-medium text-green-600">
                         Total Vendas
                       </Label>
-                      <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 font-semibold">
-                        {formatarMoeda(dados.vendas.total)}
+                      <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 font-semibold text-center" title={formatarMoeda(dados.vendas.total)}>
+                        {formatarMoedaCompacta(dados.vendas.total)}
                       </div>
                     </div>
                   </div>
@@ -441,27 +453,42 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-gray-50 rounded border">
-                      <p className="text-sm text-gray-600 font-medium">Saldo Abertura</p>
-                      <p className="text-lg font-bold text-gray-700">{formatarMoeda(dados.saldoAbertura)}</p>
+                  <div className="space-y-3">
+                    {/* Cards adaptivos - mobile: 1 por linha, desktop: 2 por linha */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex flex-col p-4 bg-gray-50 rounded border min-h-[70px] justify-center">
+                        <p className="text-sm text-gray-600 font-medium mb-2 text-center">Saldo Abertura</p>
+                        <p className="text-lg font-bold text-gray-700 text-center leading-tight" title={formatarMoeda(dados.saldoAbertura)}>
+                          {formatarMoedaCompacta(dados.saldoAbertura)}
+                        </p>
+                      </div>
+                      <div className="flex flex-col p-4 bg-green-50 rounded border border-green-200 min-h-[70px] justify-center">
+                        <p className="text-sm text-green-600 font-medium mb-2 text-center">Total Vendas</p>
+                        <p className="text-lg font-bold text-green-700 text-center leading-tight" title={formatarMoeda(dados.vendas.total)}>
+                          {formatarMoedaCompacta(dados.vendas.total)}
+                        </p>
+                      </div>
+                      <div className="flex flex-col p-4 bg-blue-50 rounded border border-blue-200 min-h-[70px] justify-center">
+                        <p className="text-sm text-blue-600 font-medium mb-2 text-center">Suprimento</p>
+                        <p className="text-lg font-bold text-blue-700 text-center leading-tight" title={formatarMoeda(dados.suprimento)}>
+                          {formatarMoedaCompacta(dados.suprimento)}
+                        </p>
+                      </div>
+                      <div className="flex flex-col p-4 bg-red-50 rounded border border-red-200 min-h-[70px] justify-center">
+                        <p className="text-sm text-red-600 font-medium mb-2 text-center">Sangrias</p>
+                        <p className="text-lg font-bold text-red-700 text-center leading-tight" title={formatarMoeda(dados.sangrias)}>
+                          {formatarMoedaCompacta(dados.sangrias)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded border border-green-200">
-                      <p className="text-sm text-green-600 font-medium">Total Vendas</p>
-                      <p className="text-lg font-bold text-green-700">{formatarMoeda(dados.vendas.total)}</p>
+
+                    {/* Resultado final */}
+                    <div className="flex flex-col p-4 bg-green-50 rounded border-2 border-green-200 min-h-[80px] justify-center">
+                      <p className="text-base text-gray-600 font-medium mb-2 text-center">Saldo Final Calculado</p>
+                      <p className="text-xl sm:text-2xl font-bold text-green-700 text-center leading-tight" title={formatarMoeda(dados.saldoFinal)}>
+                        {formatarMoedaCompacta(dados.saldoFinal)}
+                      </p>
                     </div>
-                    <div className="text-center p-3 bg-orange-50 rounded border border-orange-200">
-                      <p className="text-sm text-orange-600 font-medium">Suprimento</p>
-                      <p className="text-lg font-bold text-orange-700">{formatarMoeda(dados.suprimento)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-red-50 rounded border border-red-200">
-                      <p className="text-sm text-red-600 font-medium">Sangrias</p>
-                      <p className="text-lg font-bold text-red-700">{formatarMoeda(dados.sangrias)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 text-center p-4 bg-green-50 rounded border-2 border-green-200">
-                    <p className="text-sm text-gray-600 font-medium">Saldo Final Calculado</p>
-                    <p className="text-2xl font-bold text-green-700">{formatarMoeda(dados.saldoFinal)}</p>
                   </div>
                 </CardContent>
               </Card>
