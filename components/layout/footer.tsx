@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 export default function Footer() {
   const { unreadCount, toggleChat } = useChat()
 
+  // Footer móvel ocultado por requisição: mantido no arquivo como comentário para referência.
+  /*
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden">
       <div className="flex items-center justify-around py-2">
@@ -31,4 +33,8 @@ export default function Footer() {
       </div>
     </footer>
   )
+  */
+
+  // Retorna null para ocultar o footer mas manter o código comentado no arquivo.
+  return null
 }

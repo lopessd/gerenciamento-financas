@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import ChatComponent, { ChatMessage } from "@/components/shared/chat-component"
 
-interface FechamentoData {
+export interface FechamentoData {
   id: string
   data: string
   titulo: string
@@ -99,15 +99,17 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, confirm
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent className="max-w-md flex flex-col p-0" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="px-4 py-3 flex-none">
           <DialogTitle className="flex items-center gap-2">
             {getIcon()}
             {title}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="px-4 py-4 overflow-y-auto flex-1 space-y-4">
           <p className="text-sm text-muted-foreground">{message}</p>
+        </div>
+        <div className="px-4 py-3 flex-none">
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>
               Cancelar
@@ -135,25 +137,32 @@ function ReturnModal({ isOpen, onClose, onConfirm }: ReturnModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent className="max-w-md flex flex-col p-0" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="px-4 py-3 flex-none">
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-orange-500" />
             Retornar ao Cliente
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="px-4 py-4 overflow-y-auto flex-1 space-y-4">
+          <div className="p-3 bg-orange-50 border border-orange-200 rounded-md">
+            <p className="text-sm text-orange-800">
+              <strong>Atenção:</strong> Ao retornar o fechamento, o status será alterado para "Pendência" e o cliente será notificado automaticamente sobre as correções necessárias.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="motivo">Motivo do retorno *</Label>
             <Textarea
               id="motivo"
-              placeholder="Descreva o motivo pelo qual está retornando o fechamento..."
+              placeholder="Descreva detalhadamente o motivo pelo qual está retornando o fechamento..."
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               rows={4}
               required
             />
           </div>
+        </div>
+        <div className="px-4 py-3 flex-none">
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>
               Cancelar
@@ -174,54 +183,72 @@ function ReturnModal({ isOpen, onClose, onConfirm }: ReturnModalProps) {
 
 function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
   const [subtipo, setSubtipo] = useState("")
+  const [conclusao, setConclusao] = useState("")
 
   const subtipos = [
-    { value: "sem_divergencias", label: "Concluído sem divergências" },
-    { value: "sem_movimento", label: "Sem movimento" },
-    { value: "com_divergencias", label: "Com divergências justificadas" },
-    { value: "conferencia_parcial", label: "Conferência parcial" },
-    { value: "quebra_caixa", label: "Quebra de caixa" },
+    { value: "concluido_sem_divergencia", label: "Concluído – Sem Divergências" },
+    { value: "concluido_sem_movimento", label: "Concluído – Sem Movimento" },
+    { value: "parcialmente_concluido_conferencia", label: "Parcial – Conferência Parcial" },
+    { value: "parcialmente_concluido_divergencias", label: "Parcial – Divergências Justificadas" },
+    { value: "quebra_caixa", label: "Quebra de Caixa" },
   ]
 
   const handleConfirm = () => {
-    if (subtipo) {
-      onConfirm(subtipo)
+    if (subtipo && conclusao.trim()) {
+      onConfirm(`${subtipo}|${conclusao}`)
       setSubtipo("")
+      setConclusao("")
       onClose()
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent className="max-w-lg flex flex-col p-0" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="px-4 py-3 flex-none">
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-500" />
             Finalizar Fechamento
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Selecione o tipo de finalização *</Label>
-            <div className="space-y-2">
-              {subtipos.map((tipo) => (
-                <div key={tipo.value} className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id={tipo.value}
-                    name="subtipo"
-                    value={tipo.value}
-                    checked={subtipo === tipo.value}
-                    onChange={(e) => setSubtipo(e.target.value)}
-                    className="h-4 w-4 text-green-600"
-                  />
-                  <Label htmlFor={tipo.value} className="text-sm font-normal cursor-pointer">
-                    {tipo.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
+        <div className="px-4 py-4 overflow-y-auto flex-1 space-y-4">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800">
+              <strong>Atenção:</strong> Esta ação é irreversível. Ao finalizar, o fechamento ficará constado como finalizado no sistema e não poderá ser alterado.
+            </p>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subtipo">Tipo de finalização *</Label>
+            <select
+              id="subtipo"
+              value={subtipo}
+              onChange={(e) => setSubtipo(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              required
+            >
+              <option value="">Selecione o tipo de finalização</option>
+              {subtipos.map((tipo) => (
+                <option key={tipo.value} value={tipo.value}>
+                  {tipo.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="conclusao">Conclusão *</Label>
+            <Textarea
+              id="conclusao"
+              placeholder="Descreva sua conclusão sobre este fechamento..."
+              value={conclusao}
+              onChange={(e) => setConclusao(e.target.value)}
+              rows={4}
+              required
+            />
+          </div>
+        </div>
+        <div className="px-4 py-3 flex-none">
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>
               Cancelar
@@ -229,7 +256,7 @@ function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
             <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={handleConfirm}
-              disabled={!subtipo}
+              disabled={!subtipo || !conclusao.trim()}
             >
               Finalizar
             </Button>
@@ -332,9 +359,9 @@ export default function VisualizarFechamentoModal({
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      IN_REVIEW: { className: "bg-orange-100 text-orange-700", label: "Em Análise", icon: Clock },
-      RETURNED: { className: "bg-red-100 text-red-700", label: "Retornado", icon: AlertCircle },
-      COMPLETED: { className: "bg-green-100 text-green-700", label: "Concluído", icon: CheckCircle },
+      IN_REVIEW: { className: "bg-blue-100 text-blue-700", label: "Em Análise", icon: Clock },
+      RETURNED: { className: "bg-orange-100 text-orange-700", label: "Pendência", icon: AlertCircle },
+      COMPLETED: { className: "bg-green-100 text-green-700", label: "Finalizado", icon: CheckCircle },
       PENDING: { className: "bg-yellow-100 text-yellow-700", label: "Pendente", icon: Clock },
     }
 
@@ -406,6 +433,7 @@ export default function VisualizarFechamentoModal({
     setShowFinalizeModal(false)
     onClose()
   }
+
 
   const renderDetalhes = () => (
     <div className="space-y-6">
@@ -595,6 +623,7 @@ export default function VisualizarFechamentoModal({
       )
     }
 
+    // Status "Em Análise" - operador pode retornar ou finalizar
     if (userRole === "operador" && fechamento.status === "IN_REVIEW") {
       return (
         <div className="flex gap-2">
@@ -615,16 +644,27 @@ export default function VisualizarFechamentoModal({
       )
     }
 
+    // Status "Pendência" - operador só pode finalizar (já foi retornado)
+    if (userRole === "operador" && fechamento.status === "RETURNED") {
+      return (
+        <Button
+          onClick={() => setShowFinalizeModal(true)}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          Finalizar
+        </Button>
+      )
+    }
+
     return null
   }
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={() => {}}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
           className="w-[98vw] sm:w-[95vw] md:w-[90vw] lg:w-[90vw] xl:w-[85vw] 2xl:w-[80vw] max-w-[1100px] h-[90vh] sm:h-[85vh] max-h-[750px] flex flex-col p-0 gap-0 !rounded-xl !border-0 shadow-2xl"
           showCloseButton={false}
-          onPointerDownOutside={(e) => e.preventDefault()}
           style={{
             width: "min(98vw, 1100px)",
             maxWidth: "1100px",

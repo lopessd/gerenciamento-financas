@@ -73,23 +73,37 @@ export default function FechamentoDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-sm">Conciliados</span>
+                  <span className="text-sm">Finalizados</span>
                 </div>
-                <span className="font-medium">25 (69%)</span>
+                <span className="font-medium">7 (54%)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span className="text-sm">Em Análise</span>
+                </div>
+                <span className="font-medium">3 (23%)</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-orange-500" />
-                  <span className="text-sm">Pendentes</span>
+                  <span className="text-sm">Pendências</span>
                 </div>
-                <span className="font-medium">8 (22%)</span>
+                <span className="font-medium">2 (15%)</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <span className="text-sm">Atrasados</span>
                 </div>
-                <span className="font-medium">3 (9%)</span>
+                <span className="font-medium">2 (15%)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-gray-500" />
+                  <span className="text-sm">Aguardando</span>
+                </div>
+                <span className="font-medium">1 (8%)</span>
               </div>
             </div>
           </CardContent>

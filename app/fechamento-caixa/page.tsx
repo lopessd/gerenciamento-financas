@@ -12,7 +12,7 @@ import { Plus, Calendar, List, ArrowLeft } from "lucide-react"
 import FechamentoCalendar from "@/components/fechamento-caixa/fechamento-calendar"
 import FechamentoList from "@/components/fechamento-caixa/fechamento-list"
 import NovoFechamentoModal from "@/components/fechamento-caixa/novo-fechamento-modal"
-import VisualizarFechamentoModal from "@/components/fechamento-caixa/visualizar-fechamento-modal"
+import VisualizarFechamentoModal, { type FechamentoData } from "@/components/fechamento-caixa/visualizar-fechamento-modal"
 import { useRouter } from "next/navigation"
 
 export default function FechamentoCaixaPage() {
@@ -20,7 +20,7 @@ export default function FechamentoCaixaPage() {
   const [activeTab, setActiveTab] = useState("calendar")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [selectedFechamento, setSelectedFechamento] = useState(null)
+  const [selectedFechamento, setSelectedFechamento] = useState<FechamentoData | null>(null)
   const [dataLoaded, setDataLoaded] = useState(false)
   const router = useRouter()
 
@@ -71,9 +71,9 @@ export default function FechamentoCaixaPage() {
       titulo: `Fechamento - ${fechamentoCard.empresa}`,
       empresa: fechamentoCard.empresa,
       responsavel: fechamentoCard.responsavel,
-      status: fechamentoCard.status === "pendente" ? "IN_REVIEW" :
+      status: (fechamentoCard.status === "pendente" ? "IN_REVIEW" :
                fechamentoCard.status === "atrasado" ? "RETURNED" :
-               fechamentoCard.status === "conciliado" ? "COMPLETED" : "PENDING",
+               fechamentoCard.status === "conciliado" ? "COMPLETED" : "PENDING") as "IN_REVIEW" | "RETURNED" | "COMPLETED" | "PENDING",
       saldoAbertura: 1000.00,
       vendas: {
         boleto: 2500.00,
@@ -120,7 +120,7 @@ export default function FechamentoCaixaPage() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 md:pb-6">
+  <div className="container mx-auto px-0 sm:px-0 py-0 sm:py-6 pb-0 md:pb-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -178,7 +178,7 @@ export default function FechamentoCaixaPage() {
             <CardContent className="p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
                 <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Concluídos</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Finalizados</p>
                   <p className="text-lg sm:text-2xl font-bold text-green-500">25</p>
                 </div>
                 <Badge className="bg-green-100 text-green-700 text-xs self-start sm:self-auto">OK</Badge>
@@ -228,7 +228,7 @@ export default function FechamentoCaixaPage() {
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           fechamento={selectedFechamento}
-          userRole={user?.role || "cliente"}
+          userRole={user?.role === "admin" ? "operador" : (user?.role || "cliente")}
         />
       </div>
     </DashboardLayout>

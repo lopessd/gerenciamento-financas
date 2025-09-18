@@ -13,33 +13,41 @@ interface FechamentoListProps {
   onViewFechamento?: (fechamento: any) => void
 }
 
-// Mock data expandido para demonstração de paginação
+// Mock data para setembro de 2025 (dias 1-17, excluindo finais de semana)
 const mockFechamentos = [
-  { id: 1, empresa: "Supermercado ABC", data: "2025-01-20", valor: "R$ 15.450,00", status: "pendente", responsavel: "João Silva", comentarios: 2 },
-  { id: 2, empresa: "Farmácia XYZ", data: "2025-01-20", valor: "R$ 4.280,00", status: "conciliado", responsavel: "Maria Santos", comentarios: 1 },
-  { id: 3, empresa: "Loja de Roupas DEF", data: "2025-01-19", valor: "R$ 8.750,00", status: "atrasado", responsavel: "Pedro Costa", comentarios: 3 },
-  { id: 4, empresa: "Padaria GHI", data: "2025-01-19", valor: "R$ 2.890,00", status: "conciliado", responsavel: "Ana Lima", comentarios: 0 },
-  { id: 5, empresa: "Mercado JKL", data: "2025-01-18", valor: "Não informado", status: "sem_envio", responsavel: "-", comentarios: 0 },
-  { id: 6, empresa: "Auto Peças MNO", data: "2025-01-18", valor: "R$ 6.200,00", status: "pendente", responsavel: "Carlos Souza", comentarios: 1 },
-  { id: 7, empresa: "Livraria PQR", data: "2025-01-17", valor: "R$ 3.150,00", status: "conciliado", responsavel: "Fernanda Lima", comentarios: 0 },
-  { id: 8, empresa: "Hamburgueria STU", data: "2025-01-17", valor: "R$ 4.800,00", status: "atrasado", responsavel: "Roberto Santos", comentarios: 2 },
-  { id: 9, empresa: "Floricultura VWX", data: "2025-01-16", valor: "R$ 1.950,00", status: "conciliado", responsavel: "Patricia Oliveira", comentarios: 0 },
-  { id: 10, empresa: "Papelaria YZA", data: "2025-01-16", valor: "R$ 2.400,00", status: "pendente", responsavel: "Lucas Ferreira", comentarios: 1 },
-  { id: 11, empresa: "Salão de Beleza BCD", data: "2025-01-15", valor: "R$ 3.600,00", status: "conciliado", responsavel: "Camila Torres", comentarios: 0 },
-  { id: 12, empresa: "Oficina EFG", data: "2025-01-15", valor: "R$ 7.300,00", status: "atrasado", responsavel: "Diego Alves", comentarios: 4 },
-  { id: 13, empresa: "Clínica HIJ", data: "2025-01-14", valor: "R$ 9.200,00", status: "conciliado", responsavel: "Beatriz Costa", comentarios: 0 },
-  { id: 14, empresa: "Pet Shop KLM", data: "2025-01-14", valor: "Não informado", status: "sem_envio", responsavel: "-", comentarios: 0 },
-  { id: 15, empresa: "Relojoaria NOP", data: "2025-01-13", valor: "R$ 1.800,00", status: "pendente", responsavel: "Eduardo Melo", comentarios: 1 },
+  // Setembro - Semana 1
+  { id: 1, empresa: "Supermercado ABC", data: "2025-09-01", valor: "R$ 15.450,00", status: "finalizado_concluido", responsavel: "João Silva", comentarios: 2, tipoFinalizacao: "concluido_sem_divergencia" },
+  { id: 2, empresa: "Farmácia XYZ", data: "2025-09-02", valor: "R$ 4.280,00", status: "finalizado_concluido", responsavel: "Maria Santos", comentarios: 1, tipoFinalizacao: "parcialmente_concluido_divergencias" },
+  { id: 3, empresa: "Loja de Roupas DEF", data: "2025-09-03", valor: "R$ 8.750,00", status: "em_andamento_pendencia", responsavel: "Pedro Costa", comentarios: 3 },
+  { id: 4, empresa: "Padaria GHI", data: "2025-09-04", valor: "R$ 2.890,00", status: "finalizado_concluido", responsavel: "Ana Lima", comentarios: 0, tipoFinalizacao: "concluido_sem_movimento" },
+  { id: 5, empresa: "Mercado JKL", data: "2025-09-05", valor: "R$ 6.200,00", status: "em_andamento_analise", responsavel: "Carlos Souza", comentarios: 1 },
+
+  // Setembro - Semana 2 (dias 8-12, 6 e 7 são sábado/domingo)
+  { id: 6, empresa: "Auto Peças MNO", data: "2025-09-08", valor: "R$ 5.800,00", status: "finalizado_concluido", responsavel: "Fernanda Lima", comentarios: 0, tipoFinalizacao: "quebra_caixa" },
+  { id: 7, empresa: "Livraria PQR", data: "2025-09-09", valor: "R$ 3.150,00", status: "finalizado_concluido", responsavel: "Roberto Santos", comentarios: 2, tipoFinalizacao: "concluido_sem_divergencia" },
+  { id: 8, empresa: "Hamburgueria STU", data: "2025-09-10", valor: "R$ 4.800,00", status: "em_andamento_analise", responsavel: "Patricia Oliveira", comentarios: 1 },
+  { id: 9, empresa: "Floricultura VWX", data: "2025-09-11", valor: "R$ 1.950,00", status: "finalizado_concluido", responsavel: "Lucas Ferreira", comentarios: 0, tipoFinalizacao: "parcialmente_concluido_conferencia" },
+  { id: 10, empresa: "Papelaria YZA", data: "2025-09-12", valor: "R$ 2.400,00", status: "em_andamento_pendencia", responsavel: "Camila Torres", comentarios: 2 },
+
+  // Setembro - Semana 3 (dias 15-17, 13 e 14 são sábado/domingo)
+  { id: 11, empresa: "Salão de Beleza BCD", data: "2025-09-15", valor: "R$ 3.600,00", status: "finalizado_concluido", responsavel: "Diego Alves", comentarios: 0, tipoFinalizacao: "concluido_sem_divergencia" },
+  { id: 12, empresa: "Oficina EFG", data: "2025-09-16", valor: "R$ 7.300,00", status: "em_andamento_analise", responsavel: "Beatriz Costa", comentarios: 1 },
+  { id: 13, empresa: "Clínica HIJ", data: "2025-09-17", valor: "R$ 9.200,00", status: "sem_envio_aguardando", responsavel: "Eduardo Melo", comentarios: 0 },
+
+  // Dados atrasados (dias anteriores que não foram enviados)
+  { id: 14, empresa: "Pet Shop KLM", data: "2025-09-01", valor: "Não informado", status: "sem_envio_atrasado", responsavel: "-", comentarios: 0 },
+  { id: 15, empresa: "Relojoaria NOP", data: "2025-09-03", valor: "Não informado", status: "sem_envio_atrasado", responsavel: "-", comentarios: 0 },
 ]
 
 const ITEMS_PER_PAGE = 5
 
 const statusOptions = [
   { value: "all", label: "Todos os Status" },
-  { value: "pendente", label: "Pendente" },
-  { value: "conciliado", label: "Conciliado" },
-  { value: "atrasado", label: "Atrasado" },
-  { value: "sem_envio", label: "Sem Envio" },
+  { value: "sem_envio_aguardando", label: "Aguardando" },
+  { value: "sem_envio_atrasado", label: "Atrasado" },
+  { value: "em_andamento_analise", label: "Em Análise" },
+  { value: "em_andamento_pendencia", label: "Pendência" },
+  { value: "finalizado_concluido", label: "Finalizado" },
 ]
 
 const dateRangeOptions = [
