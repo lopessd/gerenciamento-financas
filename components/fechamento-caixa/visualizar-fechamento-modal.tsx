@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +17,16 @@ import {
   Receipt,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Building2,
+  Calendar,
+  FileMinus,
+  FileSearch,
+  AlertTriangle,
+  XOctagon,
+  Edit3,
+  Plus,
+  Trash2
 } from "lucide-react"
 import ChatComponent, { ChatMessage } from "@/components/shared/chat-component"
 
@@ -42,12 +52,39 @@ export interface FechamentoData {
   sangrias: number
   saldoFinal: number
   observacoes: string
+  tipoFinalizacao?: string
+  editavelPorOperador?: boolean
   anexos: Array<{
     id: string
     name: string
     url: string
     size: number
   }>
+  // Dados editados pelo operador
+  dadosEditados?: {
+    saldoAbertura: number
+    vendas: {
+      boleto: number
+      dinheiro: number
+      cartaoDebito: number
+      cartaoCredito: number
+      pix: number
+      transferencia: number
+      outros: number
+      total: number
+    }
+    suprimento: number
+    sangrias: number
+    saldoFinal: number
+    anexos: Array<{
+      id: string
+      name: string
+      url: string
+      size: number
+    }>
+    editadoEm: string
+    editadoPor: string
+  }
 }
 
 
@@ -74,11 +111,6 @@ interface ReturnModalProps {
   onConfirm: (motivo: string) => void
 }
 
-interface FinalizeModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: (subtipo: string) => void
-}
 
 function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, confirmText, type }: ConfirmationModalProps) {
   const getIcon = () => {
@@ -181,9 +213,114 @@ function ReturnModal({ isOpen, onClose, onConfirm }: ReturnModalProps) {
   )
 }
 
-function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
+const getFinalizacaoIcon = (tipoFinalizacao?: string) => {
+  if (!tipoFinalizacao) return null
+
+  const tipos = {
+    concluido_sem_divergencia: {
+      icon: CheckCircle,
+      className: "text-green-600",
+      tooltip: "Concluído – Sem Divergências"
+    },
+    concluido_sem_movimento: {
+      icon: FileMinus,
+      className: "text-green-600",
+      tooltip: "Concluído – Sem Movimento"
+    },
+    parcialmente_concluido_conferencia: {
+      icon: FileSearch,
+      className: "text-yellow-600",
+      tooltip: "Parcial – Conferência Parcial"
+    },
+    parcialmente_concluido_divergencias: {
+      icon: AlertTriangle,
+      className: "text-yellow-600",
+      tooltip: "Parcial – Divergências Justificadas"
+    },
+    quebra_caixa: {
+      icon: XOctagon,
+      className: "text-red-600",
+      tooltip: "Quebra de Caixa"
+    },
+  }
+
+  const config = tipos[tipoFinalizacao as keyof typeof tipos]
+  if (!config) return null
+
+  const IconComponent = config.icon
+  return (
+    <div className="relative group">
+      <IconComponent className={`h-4 w-4 sm:h-5 sm:w-5 ${config.className}`} />
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+        {config.tooltip}
+      </div>
+    </div>
+  )
+}
+
+const getFinalizacaoInfo = (tipoFinalizacao?: string) => {
+  if (!tipoFinalizacao) return null
+
+  const tipos = {
+    concluido_sem_divergencia: {
+      icon: CheckCircle,
+      className: "text-green-600",
+      text: "Concluído – Sem Divergências"
+    },
+    concluido_sem_movimento: {
+      icon: FileMinus,
+      className: "text-green-600",
+      text: "Concluído – Sem Movimento"
+    },
+    parcialmente_concluido_conferencia: {
+      icon: FileSearch,
+      className: "text-yellow-600",
+      text: "Parcial – Conferência Parcial"
+    },
+    parcialmente_concluido_divergencias: {
+      icon: AlertTriangle,
+      className: "text-yellow-600",
+      text: "Parcial – Divergências Justificadas"
+    },
+    quebra_caixa: {
+      icon: XOctagon,
+      className: "text-red-600",
+      text: "Quebra de Caixa"
+    },
+  }
+
+  const config = tipos[tipoFinalizacao as keyof typeof tipos]
+  if (!config) return null
+
+  const IconComponent = config.icon
+  return (
+    <div className="flex items-center gap-1">
+      <IconComponent className={`h-4 w-4 ${config.className}`} />
+      <span className={`text-xs font-medium ${config.className} hidden sm:inline`}>
+        {config.text}
+      </span>
+    </div>
+  )
+}
+
+interface FinalizeModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: (subtipo: string) => void
+  fechamento: FechamentoData | null
+}
+
+function FinalizeModal({ isOpen, onClose, onConfirm, fechamento }: FinalizeModalProps) {
   const [subtipo, setSubtipo] = useState("")
   const [conclusao, setConclusao] = useState("")
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedData, setEditedData] = useState<{
+    saldoAbertura: number
+    vendas: FechamentoData['vendas']
+    suprimento: number
+    sangrias: number
+    anexos: FechamentoData['anexos']
+  } | null>(null)
 
   const subtipos = [
     { value: "concluido_sem_divergencia", label: "Concluído – Sem Divergências" },
@@ -193,14 +330,90 @@ function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
     { value: "quebra_caixa", label: "Quebra de Caixa" },
   ]
 
+  // Inicializar dados para edição
+  const initializeEdit = () => {
+    if (!fechamento) return
+    setEditedData({
+      saldoAbertura: fechamento.saldoAbertura,
+      vendas: { ...fechamento.vendas },
+      suprimento: fechamento.suprimento,
+      sangrias: fechamento.sangrias,
+      anexos: [...fechamento.anexos]
+    })
+    setIsEditing(true)
+  }
+
+  const cancelEdit = () => {
+    setIsEditing(false)
+    setEditedData(null)
+  }
+
+  const updateVendaValue = (tipo: string, value: number) => {
+    if (!editedData) return
+    setEditedData(prev => prev ? ({
+      ...prev,
+      vendas: {
+        ...prev.vendas,
+        [tipo]: value
+      }
+    }) : null)
+  }
+
+  const updateField = (field: string, value: number) => {
+    if (!editedData) return
+    setEditedData(prev => prev ? ({
+      ...prev,
+      [field]: value
+    }) : null)
+  }
+
   const handleConfirm = () => {
     if (subtipo && conclusao.trim()) {
+      // Se editou, calcular dados finais e preparar para salvar
+      if (editedData) {
+        const totalVendas = Object.entries(editedData.vendas)
+          .filter(([key]) => key !== 'total')
+          .reduce((sum, [_, value]) => sum + (value as number), 0)
+
+        const saldoFinal = editedData.saldoAbertura + totalVendas + editedData.suprimento - editedData.sangrias
+
+        const dadosEditadosCompletos = {
+          saldoAbertura: editedData.saldoAbertura,
+          vendas: {
+            ...editedData.vendas,
+            total: totalVendas
+          },
+          suprimento: editedData.suprimento,
+          sangrias: editedData.sangrias,
+          saldoFinal: saldoFinal,
+          anexos: editedData.anexos,
+          editadoEm: new Date().toISOString(),
+          editadoPor: "Operador Sistema" // Aqui seria o nome real do operador
+        }
+
+        console.log("Fechamento finalizado com dados editados:", { subtipo, conclusao, dadosEditados: dadosEditadosCompletos })
+      } else {
+        console.log("Fechamento finalizado sem edições:", { subtipo, conclusao })
+      }
+
       onConfirm(`${subtipo}|${conclusao}`)
       setSubtipo("")
       setConclusao("")
+      setIsEditing(false)
+      setEditedData(null)
       onClose()
     }
   }
+
+  const formatarMoeda = (valor: number): string => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    }).format(valor)
+  }
+
+  if (!fechamento) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
@@ -211,12 +424,238 @@ function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
             Finalizar Fechamento
           </DialogTitle>
         </DialogHeader>
-        <div className="px-4 py-4 overflow-y-auto flex-1 space-y-4">
+        <div className="px-4 py-4 overflow-y-auto flex-1 space-y-4 max-h-[60vh]">
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-800">
-              <strong>Atenção:</strong> Esta ação é irreversível. Ao finalizar, o fechamento ficará constado como finalizado no sistema e não poderá ser alterado.
+              <strong>Atenção:</strong> Esta ação é irreversível. Ao finalizar, o fechamento ficará constado como finalizado no sistema.
             </p>
           </div>
+
+          {/* Botão para ativar edição */}
+          {!isEditing && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-800">Editar dados antes de finalizar</p>
+                  <p className="text-xs text-green-700">Você pode editar os valores antes de confirmar a finalização</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={initializeEdit}
+                  className="text-green-600 border-green-300 hover:bg-green-100"
+                >
+                  <Edit3 className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Seção de edição */}
+          {isEditing && (
+            <Card className="border border-green-200 bg-green-50">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-green-800">
+                    <Edit3 className="h-4 w-4 inline mr-1" />
+                    Editando Valores
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelEdit}
+                    className="text-xs"
+                  >
+                    Cancelar Edição
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Saldo de Abertura e Suprimento */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Valores Iniciais</Label>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Saldo de Abertura</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedData?.saldoAbertura || 0}
+                        onChange={(e) => {
+                          const value = Math.max(0, parseFloat(e.target.value) || 0)
+                          updateField('saldoAbertura', value)
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                        className="text-sm h-9 font-semibold [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="0,00"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Suprimento</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedData?.suprimento || 0}
+                        onChange={(e) => {
+                          const value = Math.max(0, parseFloat(e.target.value) || 0)
+                          updateField('suprimento', value)
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                        className="text-sm h-9 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vendas */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Vendas por Forma de Pagamento</Label>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Coluna 1 - Formas de Pagamento */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: 'boleto', label: 'Boleto' },
+                        { key: 'dinheiro', label: 'Dinheiro' },
+                        { key: 'cartaoDebito', label: 'Cartão Débito' },
+                        { key: 'cartaoCredito', label: 'Cartão Crédito' },
+                        { key: 'pix', label: 'PIX' },
+                        { key: 'transferencia', label: 'Transferência' },
+                        { key: 'outros', label: 'Outros' }
+                      ].map(({ key, label }) => (
+                        <div key={key} className="space-y-1">
+                          <Label className="text-xs text-gray-600">{label}</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={editedData?.vendas[key as keyof typeof editedData.vendas] || 0}
+                            onChange={(e) => {
+                              const value = Math.max(0, parseFloat(e.target.value) || 0)
+                              updateVendaValue(key, value)
+                            }}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            className="text-xs h-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Coluna 2 - Resumo de Vendas */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Resumo de Vendas</Label>
+                      <div className="bg-green-50 rounded-lg p-3 space-y-1 border border-green-200">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">Total Dinheiro + Cartões:</span>
+                          <span className="font-medium">
+                            {editedData && formatarMoeda(
+                              (editedData.vendas.dinheiro || 0) +
+                              (editedData.vendas.cartaoDebito || 0) +
+                              (editedData.vendas.cartaoCredito || 0)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">Total Digital:</span>
+                          <span className="font-medium">
+                            {editedData && formatarMoeda(
+                              (editedData.vendas.pix || 0) +
+                              (editedData.vendas.transferencia || 0) +
+                              (editedData.vendas.boleto || 0)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">Outros:</span>
+                          <span className="font-medium">
+                            {editedData && formatarMoeda(editedData.vendas.outros || 0)}
+                          </span>
+                        </div>
+                        <hr className="border-green-300" />
+                        <div className="flex justify-between text-sm font-bold">
+                          <span className="text-green-800">Total Vendas:</span>
+                          <span className="text-green-900">
+                            {editedData && formatarMoeda(
+                              Object.entries(editedData.vendas)
+                                .filter(([key]) => key !== 'total')
+                                .reduce((sum, [_, value]) => sum + value, 0)
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sangrias */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Retiradas</Label>
+                  <div className="max-w-xs">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-600">Sangrias (Retiradas)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedData?.sangrias || 0}
+                        onChange={(e) => {
+                          const value = Math.max(0, parseFloat(e.target.value) || 0)
+                          updateField('sangrias', value)
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                        className="text-sm h-9 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resumo Final Completo */}
+                <div className="border-t pt-3">
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Resumo Final</Label>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Saldo de Abertura:</span>
+                      <span className="font-medium">{editedData && formatarMoeda(editedData.saldoAbertura)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total de Vendas:</span>
+                      <span className="font-medium text-green-600">
+                        + {editedData && formatarMoeda(
+                          Object.entries(editedData.vendas)
+                            .filter(([key]) => key !== 'total')
+                            .reduce((sum, [_, value]) => sum + value, 0)
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Suprimento:</span>
+                      <span className="font-medium text-green-600">+ {editedData && formatarMoeda(editedData.suprimento)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Sangrias:</span>
+                      <span className="font-medium text-red-600">- {editedData && formatarMoeda(editedData.sangrias)}</span>
+                    </div>
+                    <hr className="border-gray-300" />
+                    <div className="flex justify-between text-base font-bold">
+                      <span className="text-gray-800">Saldo Final:</span>
+                      <span className="text-green-700">
+                        {editedData && formatarMoeda(
+                          editedData.saldoAbertura +
+                          Object.entries(editedData.vendas)
+                            .filter(([key]) => key !== 'total')
+                            .reduce((sum, [_, value]) => sum + value, 0) +
+                          editedData.suprimento -
+                          editedData.sangrias
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="subtipo">Tipo de finalização *</Label>
@@ -243,7 +682,7 @@ function FinalizeModal({ isOpen, onClose, onConfirm }: FinalizeModalProps) {
               placeholder="Descreva sua conclusão sobre este fechamento..."
               value={conclusao}
               onChange={(e) => setConclusao(e.target.value)}
-              rows={4}
+              rows={3}
               required
             />
           </div>
@@ -274,6 +713,15 @@ export default function VisualizarFechamentoModal({
   userRole
 }: VisualizarFechamentoModalProps) {
   const [activeTab, setActiveTab] = useState("detalhes")
+  const [isEditing] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
+  const [tempEditData, setTempEditData] = useState<{
+    vendas: FechamentoData['vendas']
+    suprimento: number
+    sangrias: number
+    anexos: FechamentoData['anexos']
+  } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [comentarios, setComentarios] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -435,8 +883,173 @@ export default function VisualizarFechamentoModal({
   }
 
 
+  const updateTempData = (field: 'suprimento' | 'sangrias', value: number) => {
+    if (!tempEditData) return
+
+    setTempEditData(prev => prev ? ({
+      ...prev,
+      [field]: value
+    }) : null)
+  }
+
+  const updateVendaValue = (tipo: string, value: number) => {
+    if (!tempEditData) return
+
+    setTempEditData(prev => prev ? ({
+      ...prev,
+      vendas: {
+        ...prev.vendas,
+        [tipo]: value
+      }
+    }) : null)
+  }
+
+  const addAnexo = (files: FileList) => {
+    if (!tempEditData || !files.length) return
+
+    const novosAnexos = Array.from(files).map(file => ({
+      id: `new_${Date.now()}_${Math.random()}`,
+      name: file.name,
+      url: `/mock/${file.name}`,
+      size: file.size
+    }))
+
+    setTempEditData(prev => prev ? ({
+      ...prev,
+      anexos: [...prev.anexos, ...novosAnexos]
+    }) : null)
+  }
+
+  const removeAnexo = (anexoId: string) => {
+    if (!tempEditData) return
+
+    setTempEditData(prev => prev ? ({
+      ...prev,
+      anexos: prev.anexos.filter((anexo: any) => anexo.id !== anexoId)
+    }) : null)
+  }
+
+
+  // Determinar quais dados mostrar
+  const getDisplayData = () => {
+    // Primeiro, dados originais por padrão
+    const originalData = {
+      saldoAbertura: fechamento.saldoAbertura,
+      vendas: fechamento.vendas,
+      suprimento: fechamento.suprimento,
+      sangrias: fechamento.sangrias,
+      saldoFinal: fechamento.saldoFinal,
+      anexos: fechamento.anexos
+    }
+
+    // Se está editando
+    if (isEditing && tempEditData) {
+      const totalVendas = Object.entries(tempEditData.vendas)
+        .filter(([key]) => key !== 'total')
+        .reduce((sum, [_, value]) => sum + (value as number), 0)
+
+      return {
+        saldoAbertura: fechamento.saldoAbertura,
+        vendas: {
+          ...tempEditData.vendas,
+          total: totalVendas
+        },
+        suprimento: tempEditData.suprimento,
+        sangrias: tempEditData.sangrias,
+        saldoFinal: fechamento.saldoAbertura + totalVendas + tempEditData.suprimento - tempEditData.sangrias,
+        anexos: tempEditData.anexos
+      }
+    }
+
+    // Se deve mostrar dados originais OU não há dados editados
+    if (showOriginal || !fechamento.dadosEditados) {
+      return originalData
+    }
+
+    // Mostrar dados editados
+    return {
+      saldoAbertura: fechamento.dadosEditados.saldoAbertura,
+      vendas: fechamento.dadosEditados.vendas,
+      suprimento: fechamento.dadosEditados.suprimento,
+      sangrias: fechamento.dadosEditados.sangrias,
+      saldoFinal: fechamento.dadosEditados.saldoFinal,
+      anexos: fechamento.dadosEditados.anexos
+    }
+  }
+
+  const displayData = getDisplayData()
+
   const renderDetalhes = () => (
     <div className="space-y-6">
+      {/* Toggle Original/Editado - Só aparece se houver dados editados */}
+      {fechamento.dadosEditados && (
+        <div className="flex items-center bg-white rounded-lg border border-gray-200 p-1 w-fit">
+          <Button
+            variant={showOriginal ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setShowOriginal(true)}
+            className={`text-xs h-7 px-3 ${showOriginal ? 'bg-amber-500 text-white hover:bg-amber-600' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Original
+          </Button>
+          <Button
+            variant={!showOriginal ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setShowOriginal(false)}
+            className={`text-xs h-7 px-3 ${!showOriginal ? 'bg-green-600 text-white hover:bg-green-700' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Editado
+          </Button>
+        </div>
+      )}
+
+      {/* Card de Resumo - Igual ao da Lista */}
+      <Card className="border border-gray-200 bg-white">
+        <CardContent className="py-4">
+          <div className="flex flex-col gap-3">
+            {/* Header com empresa e ícone de finalização */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-sm sm:text-base truncate">{fechamento.empresa}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Ícone de finalização para fechamentos finalizados */}
+                {fechamento.status === "COMPLETED" && getFinalizacaoIcon(fechamento.tipoFinalizacao)}
+              </div>
+            </div>
+
+            {/* Informações em duas linhas responsivas */}
+            <div className="space-y-2">
+              {/* Primeira linha: Data e Valor */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                  <Calendar className="h-3 w-3 flex-shrink-0" />
+                  <span>{new Date(fechamento.data).toLocaleDateString("pt-BR")}</span>
+                </div>
+                <div className="text-xs sm:text-sm">
+                  <span className="font-medium text-foreground">{formatarMoeda(displayData.vendas.total)}</span>
+                </div>
+              </div>
+
+              {/* Segunda linha: Responsável */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                <div className="text-xs sm:text-sm text-muted-foreground truncate">
+                  <span className="hidden sm:inline">Resp: </span>{fechamento.responsavel}
+                </div>
+              </div>
+            </div>
+
+            {/* Badge de status posicionado no rodapé do card */}
+            <div className="mt-2">
+              <div className="flex items-end justify-end">
+                {getStatusBadge(fechamento.status)}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Informações Básicas */}
       <Card className="border border-gray-200">
         <CardHeader className="pb-3">
@@ -461,7 +1074,7 @@ export default function VisualizarFechamentoModal({
             </div>
             <div>
               <Label className="text-sm font-medium text-gray-600">Saldo de Abertura</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.saldoAbertura)}</p>
+              <p className="text-sm font-semibold">{formatarMoeda(displayData.saldoAbertura)}</p>
             </div>
           </div>
         </CardContent>
@@ -477,37 +1090,33 @@ export default function VisualizarFechamentoModal({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Boleto</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.boleto)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Dinheiro</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.dinheiro)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Cartão Débito</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.cartaoDebito)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Cartão Crédito</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.cartaoCredito)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">PIX</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.pix)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Transferência</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.transferencia)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-600">Outros</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.vendas.outros)}</p>
-            </div>
+            {[
+              { key: 'boleto', label: 'Boleto' },
+              { key: 'dinheiro', label: 'Dinheiro' },
+              { key: 'cartaoDebito', label: 'Cartão Débito' },
+              { key: 'cartaoCredito', label: 'Cartão Crédito' },
+              { key: 'pix', label: 'PIX' },
+              { key: 'transferencia', label: 'Transferência' },
+              { key: 'outros', label: 'Outros' }
+            ].map(({ key, label }) => (
+              <div key={key} className="space-y-2">
+                <Label className="text-sm font-medium text-gray-600">{label}</Label>
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={tempEditData?.vendas[key as keyof typeof tempEditData.vendas] || 0}
+                    onChange={(e) => updateVendaValue(key, parseFloat(e.target.value) || 0)}
+                    className="text-sm"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold">{formatarMoeda(displayData.vendas[key as keyof typeof displayData.vendas])}</p>
+                )}
+              </div>
+            ))}
             <div className="space-y-2 p-3 bg-green-50 rounded border border-green-200">
               <Label className="text-sm font-medium text-green-700">Total Vendas</Label>
-              <p className="text-lg font-bold text-green-800">{formatarMoeda(fechamento.vendas.total)}</p>
+              <p className="text-lg font-bold text-green-800">{formatarMoeda(displayData.vendas.total)}</p>
             </div>
           </div>
         </CardContent>
@@ -525,11 +1134,31 @@ export default function VisualizarFechamentoModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-600">Suprimento</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.suprimento)}</p>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={tempEditData?.suprimento || 0}
+                  onChange={(e) => updateTempData('suprimento', parseFloat(e.target.value) || 0)}
+                  className="text-sm"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{formatarMoeda(displayData.suprimento)}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-600">Sangrias</Label>
-              <p className="text-sm font-semibold">{formatarMoeda(fechamento.sangrias)}</p>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={tempEditData?.sangrias || 0}
+                  onChange={(e) => updateTempData('sangrias', parseFloat(e.target.value) || 0)}
+                  className="text-sm"
+                />
+              ) : (
+                <p className="text-sm font-semibold">{formatarMoeda(displayData.sangrias)}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -546,7 +1175,7 @@ export default function VisualizarFechamentoModal({
         <CardContent>
           <div className="p-4 bg-green-50 rounded border-2 border-green-200 text-center">
             <Label className="text-sm font-medium text-gray-600">Saldo Final Calculado</Label>
-            <p className="text-2xl font-bold text-green-700">{formatarMoeda(fechamento.saldoFinal)}</p>
+            <p className="text-2xl font-bold text-green-700">{formatarMoeda(displayData.saldoFinal)}</p>
           </div>
         </CardContent>
       </Card>
@@ -567,17 +1196,30 @@ export default function VisualizarFechamentoModal({
       )}
 
       {/* Anexos */}
-      {fechamento.anexos.length > 0 && (
+      {(displayData.anexos.length > 0 || isEditing) && (
         <Card className="border border-gray-200">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5 text-green-600" />
-              Anexos
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-green-600" />
+                Anexos
+              </div>
+              {isEditing && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Adicionar
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {fechamento.anexos.map((arquivo) => (
+              {displayData.anexos.map((arquivo: any) => (
                 <div key={arquivo.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-gray-500" />
@@ -586,12 +1228,39 @@ export default function VisualizarFechamentoModal({
                       ({(arquivo.size / 1024).toFixed(1)} KB)
                     </span>
                   </div>
-                  <Button variant="outline" size="sm">
-                    Baixar
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm">
+                      Baixar
+                    </Button>
+                    {isEditing && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAnexo(arquivo.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
+              {displayData.anexos.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">Nenhum anexo encontrado</p>
+                </div>
+              )}
             </div>
+            {/* Input de arquivo oculto */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,application/pdf"
+              onChange={(e) => e.target.files && addAnexo(e.target.files)}
+              className="hidden"
+            />
           </CardContent>
         </Card>
       )}
@@ -671,26 +1340,29 @@ export default function VisualizarFechamentoModal({
             xl:w-[85vw] xl:h-[80vh]
             2xl:w-[80vw] 2xl:h-[75vh]
             sm:max-w-[1100px] sm:max-h-[750px] sm:rounded-xl
-            flex flex-col p-0 gap-0 border-0 shadow-2xl
+            flex flex-col p-0 gap-0 border-0 shadow-2xl overflow-x-hidden
           "
           showCloseButton={false}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-      <DialogHeader className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-gradient-to-r from-green-600 to-green-700 shrink-0 sm:rounded-t-xl">
+      <DialogHeader className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-white shrink-0 sm:rounded-t-xl">
         <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
-                <DialogTitle className="text-white text-lg sm:text-xl font-semibold">
+                <DialogTitle className="text-gray-900 text-lg sm:text-xl font-semibold">
                   <span className="hidden sm:inline">Visualizar Fechamento de Caixa - {new Date(fechamento.data).toLocaleDateString('pt-BR')}</span>
                   <span className="sm:hidden">Fechamento - {new Date(fechamento.data).toLocaleDateString('pt-BR')}</span>
                 </DialogTitle>
-                {getStatusBadge(fechamento.status)}
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(fechamento.status)}
+                  {fechamento.status === "COMPLETED" && getFinalizacaoInfo(fechamento.tipoFinalizacao)}
+                </div>
               </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-white hover:bg-white/20 transition-colors flex-shrink-0"
+                className="text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -703,7 +1375,7 @@ export default function VisualizarFechamentoModal({
             <div className="hidden lg:flex h-full">
               {/* Área de detalhes com scroll interno */}
               <div className="flex-1 flex flex-col min-w-0">
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 min-w-0 overflow-x-hidden">
                   {renderDetalhes()}
                 </div>
               </div>
@@ -749,7 +1421,7 @@ export default function VisualizarFechamentoModal({
                 {/* Conteúdo das abas - ocupam todo o espaço restante */}
                 <div className="flex-1 overflow-hidden relative">
                   <TabsContent value="detalhes" className="absolute inset-0 m-0 data-[state=inactive]:hidden">
-                    <div className="h-full overflow-y-auto p-3 sm:p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 -webkit-overflow-scrolling-touch">
+                      <div className="h-full overflow-y-auto p-3 sm:p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 -webkit-overflow-scrolling-touch min-w-0 overflow-x-hidden">
                       {renderDetalhes()}
                     </div>
                   </TabsContent>
@@ -800,6 +1472,7 @@ export default function VisualizarFechamentoModal({
         isOpen={showFinalizeModal}
         onClose={() => setShowFinalizeModal(false)}
         onConfirm={handleFinalize}
+        fechamento={fechamento}
       />
     </>
   )

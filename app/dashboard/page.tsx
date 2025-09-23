@@ -7,7 +7,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout"
 import DashboardSkeleton from "@/components/skeletons/dashboard-skeleton"
 import LoadingSpinner from "@/components/loading-spinner"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calculator, Vault, CreditCard, HelpCircle, Building2 } from "lucide-react"
+import { Calculator, Vault, CreditCard, HelpCircle, Building2, Calendar } from "lucide-react"
 
 const modules = [
   {
@@ -18,11 +18,18 @@ const modules = [
     href: "/fechamento-caixa",
   },
   {
-    id: "cofre",
-    name: "Cofre",
+    id: "cofre-diario",
+    name: "Cofre Diário",
     icon: Vault,
-    description: "Controle de movimentações",
-    href: "/cofre",
+    description: "Controle de movimentações diárias",
+    href: "/cofre-diario",
+  },
+  {
+    id: "cofre-mensal",
+    name: "Cofre Mensal",
+    icon: Calendar,
+    description: "Controle de movimentações mensais",
+    href: "/cofre-mensal",
   },
   {
     id: "contas-pagar",

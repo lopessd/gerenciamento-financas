@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react"
-import FechamentoCard from "./fechamento-card"
+import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Building2, MessageSquare, CheckCircle, FileMinus, AlertTriangle, FileSearch, XOctagon } from "lucide-react"
 
 interface FechamentoListProps {
   onViewFechamento?: (fechamento: any) => void
@@ -39,7 +38,69 @@ const mockFechamentos = [
   { id: 15, empresa: "Relojoaria NOP", data: "2025-09-03", valor: "Não informado", status: "sem_envio_atrasado", responsavel: "-", comentarios: 0 },
 ]
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = 10
+
+const getStatusBadge = (status: string) => {
+  const variants = {
+    sem_envio_aguardando: { className: "bg-gray-100 text-gray-700", label: "Aguardando" },
+    sem_envio_atrasado: { className: "bg-red-100 text-red-700", label: "Atrasado" },
+    em_andamento_analise: { className: "bg-blue-100 text-blue-700", label: "Em Análise" },
+    em_andamento_pendencia: { className: "bg-orange-100 text-orange-700", label: "Pendência" },
+    finalizado_concluido: { className: "bg-green-100 text-green-700", label: "Finalizado" },
+  }
+
+  const config = variants[status as keyof typeof variants] || variants.sem_envio_aguardando
+  return (
+    <Badge variant="status" className={config.className}>
+      {config.label}
+    </Badge>
+  )
+}
+
+const getFinalizacaoIcon = (tipoFinalizacao?: string) => {
+  if (!tipoFinalizacao) return null
+
+  const tipos = {
+    concluido_sem_divergencia: {
+      icon: CheckCircle,
+      className: "text-green-600",
+      tooltip: "Concluído – Sem Divergências"
+    },
+    concluido_sem_movimento: {
+      icon: FileMinus,
+      className: "text-green-600",
+      tooltip: "Concluído – Sem Movimento"
+    },
+    parcialmente_concluido_conferencia: {
+      icon: FileSearch,
+      className: "text-yellow-600",
+      tooltip: "Parcial – Conferência Parcial"
+    },
+    parcialmente_concluido_divergencias: {
+      icon: AlertTriangle,
+      className: "text-yellow-600",
+      tooltip: "Parcial – Divergências Justificadas"
+    },
+    quebra_caixa: {
+      icon: XOctagon,
+      className: "text-red-600",
+      tooltip: "Quebra de Caixa"
+    },
+  }
+
+  const config = tipos[tipoFinalizacao as keyof typeof tipos]
+  if (!config) return null
+
+  const IconComponent = config.icon
+  return (
+    <div className="relative group inline-block">
+      <IconComponent className={`h-4 w-4 ${config.className}`} />
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+        {config.tooltip}
+      </div>
+    </div>
+  )
+}
 
 const statusOptions = [
   { value: "all", label: "Todos os Status" },
@@ -57,12 +118,22 @@ const dateRangeOptions = [
   { value: "month", label: "Últimos 30 dias" },
 ]
 
+const tipoFinalizacaoOptions = [
+  { value: "all", label: "Todos os Tipos" },
+  { value: "concluido_sem_divergencia", label: "Concluído – Sem Divergências" },
+  { value: "concluido_sem_movimento", label: "Concluído – Sem Movimento" },
+  { value: "parcialmente_concluido_conferencia", label: "Parcial – Conferência Parcial" },
+  { value: "parcialmente_concluido_divergencias", label: "Parcial – Divergências Justificadas" },
+  { value: "quebra_caixa", label: "Quebra de Caixa" },
+]
+
 
 export default function FechamentoList({ onViewFechamento }: FechamentoListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState("all")
+  const [tipoFinalizacaoFilter, setTipoFinalizacaoFilter] = useState("all")
 
   // Função para filtrar por data
   const filterByDate = (fechamento: any, filter: string) => {
@@ -88,21 +159,25 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
     return mockFechamentos
       .filter(fechamento => {
         // Filtro por texto
-        const matchesSearch = searchTerm === "" || 
+        const matchesSearch = searchTerm === "" ||
           fechamento.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
           fechamento.responsavel.toLowerCase().includes(searchTerm.toLowerCase())
-        
+
         // Filtro por status
         const matchesStatus = statusFilter === "all" || fechamento.status === statusFilter
-        
+
         // Filtro por data
         const matchesDate = filterByDate(fechamento, dateFilter)
-        
-        return matchesSearch && matchesStatus && matchesDate
+
+        // Filtro por tipo de finalização (só aplica se status for finalizado)
+        const matchesTipoFinalizacao = tipoFinalizacaoFilter === "all" ||
+          (fechamento.status === "finalizado_concluido" && fechamento.tipoFinalizacao === tipoFinalizacaoFilter)
+
+        return matchesSearch && matchesStatus && matchesDate && matchesTipoFinalizacao
       })
       // Ordenar por data mais recente primeiro
       .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-  }, [searchTerm, statusFilter, dateFilter])
+  }, [searchTerm, statusFilter, dateFilter, tipoFinalizacaoFilter])
 
   // Paginação
   const totalPages = Math.ceil(filteredFechamentos.length / ITEMS_PER_PAGE)
@@ -112,7 +187,14 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
   // Reset da página quando filtros mudam
   useMemo(() => {
     setCurrentPage(1)
-  }, [searchTerm, statusFilter, dateFilter])
+  }, [searchTerm, statusFilter, dateFilter, tipoFinalizacaoFilter])
+
+  // Reset do filtro de tipo de finalização quando status não for finalizado
+  useMemo(() => {
+    if (statusFilter !== "finalizado_concluido") {
+      setTipoFinalizacaoFilter("all")
+    }
+  }, [statusFilter])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -120,8 +202,8 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
   
   return (
     <Card className="border-0 shadow-md">
-      <CardHeader className="p-3 sm:p-6">
-        <div className="flex flex-col space-y-3 sm:space-y-4">
+      <CardHeader className="px-6 py-2 sm:py-3">
+        <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <span className="hidden sm:inline">Lista de Fechamentos</span>
@@ -133,12 +215,12 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
           </div>
 
           {/* Filtros */}
-          <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 -mb-1">
             {/* Busca */}
-            <div className="relative">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar empresa..."
+                placeholder="Busque por fechamento de caixa..."
                 className="pl-10 text-sm h-9 sm:h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -146,9 +228,9 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
             </div>
 
             {/* Filtros em linha */}
-            <div className="flex flex-col xs:grid xs:grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto sm:min-w-[120px]">
+                <SelectTrigger className="text-sm !h-9 sm:!h-10 !px-3 items-center w-full sm:w-auto sm:min-w-[120px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,8 +242,24 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
                 </SelectContent>
               </Select>
 
+              {/* Filtro de tipo de finalização - só aparece quando status for finalizado */}
+              {statusFilter === "finalizado_concluido" && (
+                <Select value={tipoFinalizacaoFilter} onValueChange={setTipoFinalizacaoFilter}>
+                  <SelectTrigger className="text-sm !h-9 sm:!h-10 !px-3 items-center w-full sm:w-auto sm:min-w-[180px]">
+                    <SelectValue placeholder="Tipo de Finalização" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tipoFinalizacaoOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto sm:min-w-[120px]">
+                <SelectTrigger className="text-sm !h-9 sm:!h-10 !px-3 items-center w-full sm:w-auto sm:min-w-[120px]">
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,7 +274,7 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 py-2 sm:py-3">
         {filteredFechamentos.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
@@ -186,12 +284,13 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
             <p className="text-muted-foreground mb-4">
               Tente ajustar os filtros ou termos de busca.
             </p>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setSearchTerm("")
                 setStatusFilter("all")
                 setDateFilter("all")
+                setTipoFinalizacaoFilter("all")
               }}
             >
               Limpar Filtros
@@ -199,16 +298,126 @@ export default function FechamentoList({ onViewFechamento }: FechamentoListProps
           </div>
         ) : (
           <>
-            <div className="space-y-4">
+            {/* Desktop Table */}
+            <div className="hidden lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Empresa</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Data</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Valor</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Responsável</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Comentários</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedFechamentos.map((fechamento, index) => (
+                      <tr
+                        key={fechamento.id}
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
+                        onClick={() => onViewFechamento?.(fechamento)}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="font-medium text-gray-900">{fechamento.empresa}</span>
+                            {fechamento.status === "finalizado_concluido" && fechamento.tipoFinalizacao && (
+                              <div className="ml-1">
+                                {getFinalizacaoIcon(fechamento.tipoFinalizacao)}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                            <span>{new Date(fechamento.data).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-medium text-gray-900">{fechamento.valor}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-600">{fechamento.responsavel}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(fechamento.status)}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {fechamento.comentarios > 0 && (
+                            <div className="flex items-center justify-center gap-1 text-sm text-blue-600">
+                              <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                              <span>{fechamento.comentarios}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onViewFechamento?.(fechamento)
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile/Tablet Cards */}
+            <div className="lg:hidden space-y-3">
               {paginatedFechamentos.map((fechamento) => (
-                <FechamentoCard
+                <div
                   key={fechamento.id}
-                  fechamento={fechamento}
-                  onView={onViewFechamento}
-                  onApprove={(f) => console.log('Aprovar:', f)}
-                  onRequestCorrection={(f) => console.log('Solicitar correção:', f)}
-                  onViewComments={(f) => console.log('Ver comentários:', f)}
-                />
+                  className="border border-gray-200 rounded-lg p-3 bg-white hover:shadow-sm transition-shadow cursor-pointer"
+                  onClick={() => onViewFechamento?.(fechamento)}
+                >
+                  <div className="flex flex-col space-y-2">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium text-sm truncate">{fechamento.empresa}</span>
+                        {fechamento.status === "finalizado_concluido" && fechamento.tipoFinalizacao && (
+                          <div className="ml-1">
+                            {getFinalizacaoIcon(fechamento.tipoFinalizacao)}
+                          </div>
+                        )}
+                      </div>
+                      {getStatusBadge(fechamento.status)}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 flex-shrink-0" />
+                        <span>{new Date(fechamento.data).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                      <span className="font-medium">{fechamento.valor}</span>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600">{fechamento.responsavel}</span>
+                      {fechamento.comentarios > 0 && (
+                        <div className="flex items-center gap-1 text-blue-600">
+                          <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                          <span>{fechamento.comentarios}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
             

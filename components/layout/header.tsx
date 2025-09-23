@@ -107,8 +107,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 bg-gradient-to-r from-teal-800 to-teal-900 border-b border-teal-700 shadow-sm z-50">
-      <div className="max-w-[1300px] mx-auto">
-        <div className="flex items-center justify-between px-4 py-3">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="flex items-center justify-between px-4 py-2">
           {/* Logo */}
           <div className="flex items-center gap-2">
             <img 
