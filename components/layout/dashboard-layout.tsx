@@ -11,8 +11,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-800 to-teal-900 overflow-visible">
       <Header />
-      <div className="mx-auto max-w-[1300px]">
-        <main className="pt-4 pb-20 md:pb-4 relative px-4">{children}</main>
+      <div className="mx-auto max-w-[1600px]">
+        <main className="pt-2 pb-16 md:pb-2 relative px-2 sm:px-3">{children}</main>
       </div>
       <Footer />
       <ChatWidget />

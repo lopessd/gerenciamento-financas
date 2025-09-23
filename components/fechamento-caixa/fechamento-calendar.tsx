@@ -14,6 +14,15 @@ const statusColors = {
   finalizado_concluido: "border-l-green-500 bg-green-100/60",
 }
 
+// Cores de background baseadas no tipo de finalização (para dias finalizados)
+const finalizacaoBackgroundColors = {
+  concluido_sem_divergencia: "bg-green-100/60",
+  concluido_sem_movimento: "bg-green-100/60",
+  parcialmente_concluido_conferencia: "bg-yellow-100/60",
+  parcialmente_concluido_divergencias: "bg-yellow-100/60",
+  quebra_caixa: "bg-red-100/60",
+}
+
 // Dados de setembro 2025 (dias úteis apenas - finais de semana ficam em branco)
 // Status "aguardando" e "atrasado" são status do DIA, não de fechamentos específicos
 const mockData: Record<string, { status?: keyof typeof statusColors; empresa?: string; tipoFinalizacao?: string }[]> = {
@@ -205,7 +214,7 @@ export default function FechamentoCalendar() {
 
   return (
     <Card className="border-0 shadow-md bg-white">
-      <CardHeader className="bg-white border-b border-gray-200 py-3 sm:py-6">
+      <CardHeader className="bg-white py-0 sm:py-2 px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg sm:text-xl text-gray-900">
             <span className="hidden sm:inline">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
@@ -231,8 +240,8 @@ export default function FechamentoCalendar() {
           </div>
         </div>
       </CardHeader>
-  <CardContent className="py-3 sm:py-6">
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-4">
+  <CardContent className="px-6 py-2 sm:py-3">
+    <div className="grid grid-cols-7 gap-1 mb-2">
           {dayNames.map((day) => (
             <div key={day} className="text-center text-xs sm:text-sm font-semibold text-green-700 p-1 sm:p-2 bg-green-50/50 rounded-lg">
               <span className="hidden sm:inline">{day}</span>
@@ -241,7 +250,7 @@ export default function FechamentoCalendar() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {getDaysInMonth(currentDate).map((day, index) => {
             if (!day) {
               return <div key={index} className="p-1 sm:p-2" />
@@ -255,7 +264,7 @@ export default function FechamentoCalendar() {
 
             // build classes explicitly to avoid accidental leftover border-left
             const base = [
-              "relative p-1 sm:p-2 min-h-[50px] sm:min-h-[80px] border border-gray-200 rounded-lg transition-all duration-200",
+              "relative p-1 sm:p-2 min-h-[40px] sm:min-h-[60px] border border-gray-200 rounded-lg transition-all duration-200",
             ]
 
             // Finais de semana ficam em branco sem status e sem cursor pointer
@@ -272,13 +281,35 @@ export default function FechamentoCalendar() {
               const hasConcluido = dayData.some(d => d.status === "finalizado_concluido")
 
               let statusColor = "bg-white"
-              if (hasAtrasado) statusColor = statusColors.sem_envio_atrasado
-              else if (hasPendencia) statusColor = statusColors.em_andamento_pendencia
-              else if (hasAnalise) statusColor = statusColors.em_andamento_analise
-              else if (hasAguardando) statusColor = statusColors.sem_envio_aguardando
-              else if (hasConcluido) statusColor = statusColors.finalizado_concluido
+              let borderColor = ""
 
-              base.push("border-l-2 sm:border-l-4", statusColor, "hover:shadow-md cursor-pointer")
+              if (hasAtrasado) {
+                statusColor = statusColors.sem_envio_atrasado
+              } else if (hasPendencia) {
+                statusColor = statusColors.em_andamento_pendencia
+              } else if (hasAnalise) {
+                statusColor = statusColors.em_andamento_analise
+              } else if (hasAguardando) {
+                statusColor = statusColors.sem_envio_aguardando
+              } else if (hasConcluido) {
+                // Para dias finalizados: borda verde sempre, background baseado no tipo de finalização
+                borderColor = "border-l-green-500"
+                const fechamentoFinalizado = dayData.find(d => d.status === "finalizado_concluido")
+                const tipoFinalizacao = fechamentoFinalizado?.tipoFinalizacao
+
+                if (tipoFinalizacao && finalizacaoBackgroundColors[tipoFinalizacao as keyof typeof finalizacaoBackgroundColors]) {
+                  statusColor = finalizacaoBackgroundColors[tipoFinalizacao as keyof typeof finalizacaoBackgroundColors]
+                } else {
+                  statusColor = "bg-green-100/60" // fallback para verde claro
+                }
+              }
+
+              // Para finalizados, usar a borda verde específica; para outros, usar a cor do statusColors
+              if (hasConcluido) {
+                base.push("border-l-2 sm:border-l-4", borderColor, statusColor, "hover:shadow-md cursor-pointer")
+              } else {
+                base.push("border-l-2 sm:border-l-4", statusColor, "hover:shadow-md cursor-pointer")
+              }
             }
 
             return (
@@ -308,7 +339,7 @@ export default function FechamentoCalendar() {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-green-100 space-y-4">
+        <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-green-100 space-y-3">
           {/* Status Legend */}
           <div>
             <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Status dos Fechamentos</h4>

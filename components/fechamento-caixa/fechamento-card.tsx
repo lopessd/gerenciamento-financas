@@ -12,7 +12,7 @@ interface FechamentoData {
   empresa: string
   data: string
   valor: string
-  status: "sem_envio_aguardando" | "sem_envio_atrasado" | "em_andamento_analise" | "em_andamento_pendencia" | "finalizado_concluido"
+  status: "sem_envio_aguardando" | "sem_envio_atrasado" | "em_andamento_analise" | "em_andamento_pendencia" | "finalizado_concluido" | string
   responsavel: string
   comentarios: number
   tipoFinalizacao?: string
@@ -24,6 +24,8 @@ interface FechamentoCardProps {
   onApprove?: (fechamento: FechamentoData) => void
   onRequestCorrection?: (fechamento: FechamentoData) => void
   onViewComments?: (fechamento: FechamentoData) => void
+  compact?: boolean
+  extraCompact?: boolean
 }
 
 const getStatusBadge = (status: string) => {
@@ -88,14 +90,108 @@ const getFinalizacaoIcon = (tipoFinalizacao?: string) => {
   )
 }
 
-export default function FechamentoCard({ 
-  fechamento, 
-  onView, 
-  onApprove, 
-  onRequestCorrection, 
-  onViewComments 
+export default function FechamentoCard({
+  fechamento,
+  onView,
+  onApprove,
+  onRequestCorrection,
+  onViewComments,
+  compact = false,
+  extraCompact = false
 }: FechamentoCardProps) {
   const { user } = useAuth()
+
+  if (extraCompact) {
+    return (
+      <Card
+        className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white"
+        onClick={() => onView?.(fechamento)}
+      >
+        <CardContent className="p-2">
+          <div className="space-y-1">
+            {/* Empresa */}
+            <div className="flex items-center gap-1">
+              <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <span className="font-medium text-xs truncate">{fechamento.empresa}</span>
+            </div>
+
+            {/* Data e Valor em linha */}
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3 flex-shrink-0" />
+                <span>{new Date(fechamento.data).toLocaleDateString("pt-BR")}</span>
+              </div>
+              <div className="text-xs font-medium">{fechamento.valor}</div>
+            </div>
+
+            {/* Responsável e Ícones */}
+            <div className="flex items-center justify-between gap-1">
+              <div className="text-xs text-muted-foreground truncate flex-1">
+                {fechamento.responsavel}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {fechamento.comentarios > 0 && (
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">{fechamento.comentarios}</span>
+                  </div>
+                )}
+                {fechamento.status === "finalizado_concluido" && getFinalizacaoIcon(fechamento.tipoFinalizacao)}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (compact) {
+    return (
+      <Card
+        className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white"
+        onClick={() => onView?.(fechamento)}
+      >
+        <CardContent className="p-3">
+          <div className="space-y-2">
+            {/* Empresa */}
+            <div className="flex items-center gap-1">
+              <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <span className="font-medium text-xs truncate">{fechamento.empresa}</span>
+            </div>
+
+            {/* Data */}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3 flex-shrink-0" />
+              <span>{new Date(fechamento.data).toLocaleDateString("pt-BR")}</span>
+            </div>
+
+            {/* Valor */}
+            <div className="text-xs font-medium">{fechamento.valor}</div>
+
+            {/* Responsável */}
+            <div className="text-xs text-muted-foreground truncate">
+              {fechamento.responsavel}
+            </div>
+
+            {/* Comentários e ícone de finalização */}
+            <div className="flex items-center gap-2 justify-between min-w-0">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                {fechamento.comentarios > 0 && (
+                  <>
+                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                    <span>{fechamento.comentarios}</span>
+                  </>
+                )}
+              </div>
+              <div className="flex-shrink-0">
+                {fechamento.status === "finalizado_concluido" && getFinalizacaoIcon(fechamento.tipoFinalizacao)}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card

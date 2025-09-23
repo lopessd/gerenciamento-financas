@@ -32,7 +32,7 @@ interface FechamentoDados {
   }
   suprimento: number
   sangrias: number
-  saldoFinal: number
+  saldoFinalCaixa: number
   observacoes: string
   anexos: File[]
 }
@@ -71,6 +71,100 @@ function ConfirmacaoCancelamento({ isOpen, onConfirm, onCancel }: ConfirmacaoCan
   )
 }
 
+interface ConfirmacaoEnvioProps {
+  isOpen: boolean
+  onConfirmar: () => void
+  onCancelar: () => void
+}
+
+interface DivergenciaCaixaProps {
+  isOpen: boolean
+  esperado: number
+  informado: number
+  onContinuar: () => void
+  onVoltar: () => void
+  formatarMoeda: (valor: number) => string
+}
+
+function ConfirmacaoEnvio({ isOpen, onConfirmar, onCancelar }: ConfirmacaoEnvioProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={() => {}}>
+      <DialogContent noBorder className="max-w-md w-[90vw] p-4 sm:p-6 rounded-lg overflow-hidden" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="pb-3">
+          <DialogTitle className="flex items-center gap-2 text-orange-600 text-base sm:text-lg">
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            Confirmar Envio
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja enviar este fechamento de caixa? Após o envio, não será possível editá-lo.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={onCancelar} size="sm">
+              Cancelar
+            </Button>
+            <Button type="button" variant="default" onClick={onConfirmar} size="sm" className="bg-green-600 hover:bg-green-700">
+              Confirmar Envio
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DivergenciaCaixa({ isOpen, esperado, informado, onContinuar, onVoltar, formatarMoeda }: DivergenciaCaixaProps) {
+  const diferenca = informado - esperado
+  const isDiferencaPositiva = diferenca > 0
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onVoltar}>
+      <DialogContent noBorder className="max-w-md w-[90vw] p-4 sm:p-6 rounded-lg overflow-hidden" showCloseButton={true} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="pb-3">
+          <DialogTitle className="flex items-center gap-2 text-red-600 text-base sm:text-lg">
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            Divergência no Caixa
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Foi detectada uma divergência entre o valor esperado e o valor informado do caixa:
+          </p>
+
+          <div className="space-y-3 bg-gray-50 p-4 rounded">
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Valor Esperado:</span>
+              <span className="text-sm font-bold text-green-600">{formatarMoeda(esperado)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Valor Informado:</span>
+              <span className="text-sm font-bold text-gray-700">{formatarMoeda(informado)}</span>
+            </div>
+            <hr className="border-gray-300" />
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Diferença:</span>
+              <span className={`text-sm font-bold ${isDiferencaPositiva ? 'text-green-600' : 'text-red-600'}`}>
+                {isDiferencaPositiva ? '+' : ''}{formatarMoeda(diferenca)}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Esta divergência será registrada para análise.
+          </p>
+
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={onVoltar} size="sm">
+              Fechar
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFechamentoModalProps) {
   const [dados, setDados] = useState<FechamentoDados>({
     data: new Date().toISOString().split('T')[0],
@@ -88,13 +182,17 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
     },
     suprimento: 0,
     sangrias: 0,
-    saldoFinal: 0,
+    saldoFinalCaixa: 0,
     observacoes: '',
     anexos: []
   })
 
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
+  const [mostrarConfirmacaoEnvio, setMostrarConfirmacaoEnvio] = useState(false)
   const [temAlteracoes, setTemAlteracoes] = useState(false)
+  const [erroValidacao, setErroValidacao] = useState<string>('')
+  const [mostrarDivergencia, setMostrarDivergencia] = useState(false)
+  const [divergenciaInfo, setDivergenciaInfo] = useState<{esperado: number, informado: number}>({esperado: 0, informado: 0})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -105,10 +203,9 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
 
     setDados(prev => ({
       ...prev,
-      vendas: { ...prev.vendas, total },
-      saldoFinal: prev.saldoAbertura + total + prev.suprimento - prev.sangrias
+      vendas: { ...prev.vendas, total }
     }))
-  }, [dados.vendas.boleto, dados.vendas.dinheiro, dados.vendas.cartaoDebito, dados.vendas.cartaoCredito, dados.vendas.pix, dados.vendas.transferencia, dados.vendas.outros, dados.saldoAbertura, dados.suprimento, dados.sangrias])
+  }, [dados.vendas.boleto, dados.vendas.dinheiro, dados.vendas.cartaoDebito, dados.vendas.cartaoCredito, dados.vendas.pix, dados.vendas.transferencia, dados.vendas.outros])
 
   useEffect(() => {
     const hasChanges = dados.titulo !== '' ||
@@ -116,6 +213,7 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                       Object.values(dados.vendas).some(v => typeof v === 'number' && v !== 0) ||
                       dados.suprimento !== 0 ||
                       dados.sangrias !== 0 ||
+                      dados.saldoFinalCaixa !== 0 ||
                       dados.observacoes !== '' ||
                       dados.anexos.length > 0
     setTemAlteracoes(hasChanges)
@@ -129,21 +227,68 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
     }).format(valor)
   }
 
+  const formatarMoedaCompacta = (valor: number): string => {
+    if (Math.abs(valor) >= 1000000) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(valor)
+    }
+    return formatarMoeda(valor)
+  }
+
   const parseMoeda = (valor: string): number => {
     const numericValue = valor.replace(/[^\d,]/g, '').replace(',', '.')
     return parseFloat(numericValue) || 0
+  }
+
+  const calcularSaldoEsperado = (): number => {
+    return dados.saldoAbertura + dados.suprimento + dados.vendas.dinheiro - dados.sangrias
   }
 
   const handleInputChange = (campo: keyof FechamentoDados, valor: any) => {
     setDados(prev => ({ ...prev, [campo]: valor }))
   }
 
-  const handleVendasChange = (tipo: keyof typeof dados.vendas, valor: string) => {
+  const handleNumericChange = (campo: keyof FechamentoDados, valorString: string) => {
+    // Permitir string vazia para poder deletar
+    if (valorString === '') {
+      setDados(prev => ({ ...prev, [campo]: 0 }))
+      return
+    }
+
+    const valor = parseFloat(valorString)
+    // Bloquear valores inválidos ou negativos, mas permitir zero
+    if (isNaN(valor) || valor < 0) {
+      return
+    }
+
+    setDados(prev => ({ ...prev, [campo]: valor }))
+  }
+
+  const handleVendasChange = (tipo: keyof typeof dados.vendas, valorString: string) => {
     if (tipo === 'total') return
-    const numericValue = parseMoeda(valor)
+
+    // Permitir string vazia para poder deletar
+    if (valorString === '') {
+      setDados(prev => ({
+        ...prev,
+        vendas: { ...prev.vendas, [tipo]: 0 }
+      }))
+      return
+    }
+
+    const valor = parseFloat(valorString)
+    // Bloquear valores inválidos ou negativos, mas permitir zero
+    if (isNaN(valor) || valor < 0) {
+      return
+    }
+
     setDados(prev => ({
       ...prev,
-      vendas: { ...prev.vendas, [tipo]: numericValue }
+      vendas: { ...prev.vendas, [tipo]: valor }
     }))
   }
 
@@ -159,6 +304,11 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
       ...prev,
       anexos: [...prev.anexos, ...validFiles]
     }))
+
+    // Limpar erro de validação se anexo foi adicionado
+    if (validFiles.length > 0 && erroValidacao) {
+      setErroValidacao('')
+    }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -185,8 +335,92 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
     onClose()
   }
 
+  const validarCampos = (): boolean => {
+    setErroValidacao('')
+
+    // Validar campos obrigatórios
+    if (!dados.titulo.trim()) {
+      setErroValidacao('O título/descrição é obrigatório.')
+      return false
+    }
+
+    if (!dados.data) {
+      setErroValidacao('A data do fechamento é obrigatória.')
+      return false
+    }
+
+    if (isNaN(dados.saldoAbertura) || dados.saldoAbertura < 0) {
+      setErroValidacao('O saldo inicial deve ser um valor válido maior ou igual a zero.')
+      return false
+    }
+
+    if (isNaN(dados.suprimento) || dados.suprimento < 0) {
+      setErroValidacao('O valor de suprimentos deve ser um valor válido maior ou igual a zero.')
+      return false
+    }
+
+    if (isNaN(dados.sangrias) || dados.sangrias < 0) {
+      setErroValidacao('O valor de sangrias deve ser um valor válido maior ou igual a zero.')
+      return false
+    }
+
+    if (isNaN(dados.saldoFinalCaixa) || dados.saldoFinalCaixa < 0) {
+      setErroValidacao('O saldo final do caixa deve ser um valor válido maior ou igual a zero.')
+      return false
+    }
+
+    // Validar se todas as vendas são válidas (>= 0)
+    const vendasInvalidas = Object.entries(dados.vendas).filter(([key, valor]) => {
+      if (key === 'total') return false // Pular o total que é calculado
+      return typeof valor === 'number' && (isNaN(valor) || valor < 0)
+    })
+
+    if (vendasInvalidas.length > 0) {
+      setErroValidacao('Todos os valores de vendas devem ser valores válidos maiores ou iguais a zero.')
+      return false
+    }
+
+    // Validar se existe sangria e se há anexo obrigatório
+    if (dados.sangrias > 0 && dados.anexos.length === 0) {
+      setErroValidacao('É obrigatório anexar um comprovante quando houver sangria.')
+      return false
+    }
+
+    return true
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validarCampos()) {
+      return
+    }
+
+    // Mostrar popup de confirmação de envio
+    setMostrarConfirmacaoEnvio(true)
+  }
+
+  const confirmarEnvio = () => {
+    setMostrarConfirmacaoEnvio(false)
+
+    // Verificar divergência no saldo do caixa
+    const saldoEsperado = calcularSaldoEsperado()
+    const diferencaAbsoluta = Math.abs(saldoEsperado - dados.saldoFinalCaixa)
+
+    if (diferencaAbsoluta > 0.01) { // Tolerância de 1 centavo para arredondamentos
+      setDivergenciaInfo({
+        esperado: saldoEsperado,
+        informado: dados.saldoFinalCaixa
+      })
+      setMostrarDivergencia(true)
+      return
+    }
+
+    // Se não há divergência, finalizar envio
+    finalizarEnvio()
+  }
+
+  const finalizarEnvio = () => {
     if (onSave) {
       onSave(dados)
     }
@@ -218,20 +452,6 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
             <form id="fechamento-form" onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="data" className="text-sm font-medium">
-                    Data do Fechamento *
-                  </Label>
-                  <Input
-                    id="data"
-                    type="date"
-                    value={dados.data}
-                    onChange={(e) => handleInputChange('data', e.target.value)}
-                    className="w-full"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="titulo" className="text-sm font-medium">
                     Título/Descrição *
                   </Label>
@@ -241,6 +461,20 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                     placeholder="Ex: Fechamento Diário - Loja Principal"
                     value={dados.titulo}
                     onChange={(e) => handleInputChange('titulo', e.target.value)}
+                    className="w-full"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="data" className="text-sm font-medium">
+                    Data do Fechamento *
+                  </Label>
+                  <Input
+                    id="data"
+                    type="date"
+                    value={dados.data}
+                    onChange={(e) => handleInputChange('data', e.target.value)}
                     className="w-full"
                     required
                   />
@@ -255,19 +489,40 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <Label htmlFor="saldoAbertura" className="text-sm font-medium">
-                      Valor do Saldo de Abertura
-                    </Label>
-                    <Input
-                      id="saldoAbertura"
-                      type="number"
-                      step="0.01"
-                      placeholder="0,00"
-                      value={dados.saldoAbertura || ''}
-                      onChange={(e) => handleInputChange('saldoAbertura', parseFloat(e.target.value) || 0)}
-                      className="w-full"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="saldoAbertura" className="text-sm font-medium">
+                        Saldo Inicial *
+                      </Label>
+                      <Input
+                        id="saldoAbertura"
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={dados.saldoAbertura.toString()}
+                        onChange={(e) => handleNumericChange('saldoAbertura', e.target.value)}
+                        className="w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="suprimento" className="text-sm font-medium">
+                        Suprimentos *
+                      </Label>
+                      <Input
+                        id="suprimento"
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={dados.suprimento.toString()}
+                        onChange={(e) => handleNumericChange('suprimento', e.target.value)}
+                        className="w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -282,100 +537,104 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="boleto" className="text-sm font-medium">
-                        Boleto
-                      </Label>
-                      <Input
-                        id="boleto"
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={dados.vendas.boleto || ''}
-                        onChange={(e) => handleVendasChange('boleto', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
                       <Label htmlFor="dinheiro" className="text-sm font-medium">
-                        Dinheiro
+                        Dinheiro *
                       </Label>
                       <Input
                         id="dinheiro"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.dinheiro || ''}
+                        value={dados.vendas.dinheiro.toString()}
                         onChange={(e) => handleVendasChange('dinheiro', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="cartaoDebito" className="text-sm font-medium">
-                        Cartão Débito
+                        Cartão Débito *
                       </Label>
                       <Input
                         id="cartaoDebito"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.cartaoDebito || ''}
+                        value={dados.vendas.cartaoDebito.toString()}
                         onChange={(e) => handleVendasChange('cartaoDebito', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="cartaoCredito" className="text-sm font-medium">
-                        Cartão Crédito
+                        Cartão Crédito *
                       </Label>
                       <Input
                         id="cartaoCredito"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.cartaoCredito || ''}
+                        value={dados.vendas.cartaoCredito.toString()}
                         onChange={(e) => handleVendasChange('cartaoCredito', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="pix" className="text-sm font-medium">
-                        PIX
+                        PIX *
                       </Label>
                       <Input
                         id="pix"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.pix || ''}
+                        value={dados.vendas.pix.toString()}
                         onChange={(e) => handleVendasChange('pix', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="transferencia" className="text-sm font-medium">
-                        Transferência
+                      <Label htmlFor="boleto" className="text-sm font-medium">
+                        Boleto *
                       </Label>
                       <Input
-                        id="transferencia"
+                        id="boleto"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.transferencia || ''}
-                        onChange={(e) => handleVendasChange('transferencia', e.target.value)}
+                        value={dados.vendas.boleto.toString()}
+                        onChange={(e) => handleVendasChange('boleto', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="outros" className="text-sm font-medium">
-                        Outros
+                        Outros *
                       </Label>
                       <Input
                         id="outros"
                         type="number"
                         step="0.01"
                         placeholder="0,00"
-                        value={dados.vendas.outros || ''}
+                        value={dados.vendas.outros.toString()}
                         onChange={(e) => handleVendasChange('outros', e.target.value)}
+                        className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        required
                       />
                     </div>
 
@@ -383,8 +642,8 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                       <Label className="text-sm font-medium text-green-600">
                         Total Vendas
                       </Label>
-                      <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 font-semibold">
-                        {formatarMoeda(dados.vendas.total)}
+                      <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 font-semibold text-center" title={formatarMoeda(dados.vendas.total)}>
+                        {formatarMoedaCompacta(dados.vendas.total)}
                       </div>
                     </div>
                   </div>
@@ -395,40 +654,33 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Calculator className="h-5 w-5 text-green-600" />
-                    Outras Movimentações
+                    Retiradas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="suprimento" className="text-sm font-medium">
-                        Suprimento
-                      </Label>
-                      <Input
-                        id="suprimento"
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={dados.suprimento || ''}
-                        onChange={(e) => handleInputChange('suprimento', parseFloat(e.target.value) || 0)}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sangrias" className="text-sm font-medium">
-                        Sangrias
-                      </Label>
-                      <Input
-                        id="sangrias"
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={dados.sangrias || ''}
-                        onChange={(e) => handleInputChange('sangrias', parseFloat(e.target.value) || 0)}
-                        className="w-full"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sangrias" className="text-sm font-medium">
+                      Sangrias *
+                      {dados.sangrias > 0 && (
+                        <span className="text-red-500 ml-1">(anexo obrigatório)</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="sangrias"
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      value={dados.sangrias.toString()}
+                      onChange={(e) => handleNumericChange('sangrias', e.target.value)}
+                      className="w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      required
+                    />
+                    {dados.sangrias > 0 && (
+                      <p className="text-xs text-red-600 mt-1">
+                        * Anexo obrigatório para sangrias
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -437,31 +689,28 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Calculator className="h-5 w-5 text-green-600" />
-                    Resumo Financeiro
+                    Saldo Final do Caixa
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-gray-50 rounded border">
-                      <p className="text-sm text-gray-600 font-medium">Saldo Abertura</p>
-                      <p className="text-lg font-bold text-gray-700">{formatarMoeda(dados.saldoAbertura)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 rounded border border-green-200">
-                      <p className="text-sm text-green-600 font-medium">Total Vendas</p>
-                      <p className="text-lg font-bold text-green-700">{formatarMoeda(dados.vendas.total)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 rounded border border-orange-200">
-                      <p className="text-sm text-orange-600 font-medium">Suprimento</p>
-                      <p className="text-lg font-bold text-orange-700">{formatarMoeda(dados.suprimento)}</p>
-                    </div>
-                    <div className="text-center p-3 bg-red-50 rounded border border-red-200">
-                      <p className="text-sm text-red-600 font-medium">Sangrias</p>
-                      <p className="text-lg font-bold text-red-700">{formatarMoeda(dados.sangrias)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 text-center p-4 bg-green-50 rounded border-2 border-green-200">
-                    <p className="text-sm text-gray-600 font-medium">Saldo Final Calculado</p>
-                    <p className="text-2xl font-bold text-green-700">{formatarMoeda(dados.saldoFinal)}</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="saldoFinalCaixa" className="text-sm font-medium">
+                      Valor do Caixa Físico *
+                    </Label>
+                    <Input
+                      id="saldoFinalCaixa"
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      value={dados.saldoFinalCaixa.toString()}
+                      onChange={(e) => handleNumericChange('saldoFinalCaixa', e.target.value)}
+                      className="w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      required
+                    />
+                    <p className="text-xs text-gray-500">
+                      Informe o valor físico encontrado no caixa para conferência
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -480,19 +729,35 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                 />
               </div>
 
-              <Card className="border border-gray-200">
+              <Card className={`border ${dados.sangrias > 0 && dados.anexos.length === 0 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5 text-green-600" />
+                    <FileText className={`h-5 w-5 ${dados.sangrias > 0 ? 'text-red-600' : 'text-green-600'}`} />
                     Anexos
+                    {dados.sangrias > 0 && (
+                      <span className="text-red-500 text-base">*</span>
+                    )}
                   </CardTitle>
+                  {dados.sangrias > 0 && (
+                    <p className="text-sm text-red-600 mt-2">
+                      Anexo obrigatório devido à sangria de {formatarMoeda(dados.sangrias)}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded p-6 text-center hover:border-gray-400 transition-colors">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">
-                        Anexar comprovantes (imagens ou PDF)
+                    <div className={`border-2 border-dashed rounded p-6 text-center transition-colors ${
+                      dados.sangrias > 0 && dados.anexos.length === 0
+                        ? 'border-red-300 bg-red-50 hover:border-red-400'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                      <Upload className={`h-8 w-8 mx-auto mb-2 ${
+                        dados.sangrias > 0 && dados.anexos.length === 0 ? 'text-red-400' : 'text-gray-400'
+                      }`} />
+                      <p className={`text-sm mb-2 ${
+                        dados.sangrias > 0 && dados.anexos.length === 0 ? 'text-red-600' : 'text-gray-600'
+                      }`}>
+                        {dados.sangrias > 0 ? 'Anexar comprovante obrigatório (imagens ou PDF)' : 'Anexar comprovantes (imagens ou PDF)'}
                       </p>
                       <p className="text-xs text-gray-500 mb-3">
                         Máximo 5MB por arquivo
@@ -507,12 +772,12 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
                       />
                       <Button
                         type="button"
-                        variant="outline"
+                        variant={dados.sangrias > 0 && dados.anexos.length === 0 ? "destructive" : "outline"}
                         onClick={() => fileInputRef.current?.click()}
                         className="gap-2"
                       >
                         <Upload className="h-4 w-4" />
-                        Selecionar Arquivos
+                        {dados.sangrias > 0 && dados.anexos.length === 0 ? 'Selecionar Comprovante Obrigatório' : 'Selecionar Arquivos'}
                       </Button>
                     </div>
 
@@ -552,6 +817,12 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
           </div>
 
           <div className="shrink-0 p-6 border-t bg-gray-50 rounded-b-xl">
+            {erroValidacao && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-700">{erroValidacao}</span>
+              </div>
+            )}
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={handleFechar}>
                 Cancelar
@@ -568,6 +839,27 @@ export default function NovoFechamentoModal({ isOpen, onClose, onSave }: NovoFec
         isOpen={mostrarConfirmacao}
         onConfirm={confirmarCancelamento}
         onCancel={() => setMostrarConfirmacao(false)}
+      />
+
+      <ConfirmacaoEnvio
+        isOpen={mostrarConfirmacaoEnvio}
+        onConfirmar={confirmarEnvio}
+        onCancelar={() => setMostrarConfirmacaoEnvio(false)}
+      />
+
+      <DivergenciaCaixa
+        isOpen={mostrarDivergencia}
+        esperado={divergenciaInfo.esperado}
+        informado={divergenciaInfo.informado}
+        onContinuar={() => {
+          setMostrarDivergencia(false)
+          finalizarEnvio()
+        }}
+        onVoltar={() => {
+          setMostrarDivergencia(false)
+          finalizarEnvio() // Finalizar envio mesmo com divergência quando fechar
+        }}
+        formatarMoeda={formatarMoeda}
       />
     </>
   )

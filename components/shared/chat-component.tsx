@@ -140,10 +140,10 @@ export default function ChatComponent({
   const inputAreaHeight = 64 + attachmentAreaHeight + (textareaLines > 1 ? 20 : 0) // padding base + anexos + linhas extras do textarea
 
   return (
-    <div className={`${height} flex flex-col ${className}`}>
+    <div className={`${height} flex flex-col ${className} min-h-0`}>
       {/* Área de mensagens com scroll independente - altura dinâmica */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300"
         style={{
           height: `calc(100% - ${inputAreaHeight}px)`,
           minHeight: `calc(100% - ${inputAreaHeight}px)`
@@ -164,7 +164,7 @@ export default function ChatComponent({
       </div>
 
       {/* Footer fixo - altura fixa na parte inferior */}
-      <div className="flex-shrink-0 border-t bg-white shadow-lg">
+      <div className="flex-shrink-0 border-t bg-white shadow-sm">
         {/* Área de anexos selecionados - layout horizontal em grade */}
         {attachments.length > 0 && (
           <div className="px-4 pt-2 pb-1 border-b bg-gray-50">
