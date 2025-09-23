@@ -38,7 +38,7 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 ### **FASE 1: Otimização do Layout Principal** ⏱️ *30min*
 
 #### 1.1 Otimizar DashboardLayout
-```tsx
+\`\`\`tsx
 // components/layout/dashboard-layout.tsx
 
 // ANTES:
@@ -46,21 +46,21 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 
 // DEPOIS:
 <main className="pt-2 pb-16 md:pb-2 relative px-2 sm:px-3">{children}</main>
-```
+\`\`\`
 
 #### 1.2 Expandir Container Máximo
-```tsx
+\`\`\`tsx
 // ANTES:
 <div className="mx-auto max-w-[1300px]">
 
 // DEPOIS:
 <div className="mx-auto max-w-[1400px]">
-```
+\`\`\`
 
 ### **FASE 2: Otimização da Página Principal** ⏱️ *20min*
 
 #### 2.1 Reduzir Espaçamentos na Página
-```tsx
+\`\`\`tsx
 // app/fechamento-caixa/page.tsx
 
 // Header - ANTES:
@@ -74,21 +74,21 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 
 // Tabs - DEPOIS:
 <TabsList className="grid grid-cols-3 mb-2 sm:mb-3 gap-1 !h-8 sm:!h-9 !p-1 w-full sm:max-w-[720px] justify-start">
-```
+\`\`\`
 
 #### 2.2 Otimizar Container da Página
-```tsx
+\`\`\`tsx
 // ANTES:
 <div className="container mx-auto px-0 sm:px-0 py-0 sm:py-6 pb-0 md:pb-6">
 
 // DEPOIS:
 <div className="container mx-auto px-0 sm:px-0 py-0 pb-0">
-```
+\`\`\`
 
 ### **FASE 3: Otimização do Calendário** ⏱️ *45min*
 
 #### 3.1 Reduzir Paddings do Card
-```tsx
+\`\`\`tsx
 // components/fechamento-caixa/fechamento-calendar.tsx
 
 // CardHeader - ANTES:
@@ -102,19 +102,19 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 
 // CardContent - DEPOIS:
 <CardContent className="py-2 sm:py-4">
-```
+\`\`\`
 
 #### 3.2 Otimizar Tamanho das Células
-```tsx
+\`\`\`tsx
 // ANTES:
 "relative p-1 sm:p-2 min-h-[50px] sm:min-h-[80px] border border-gray-200 rounded-lg transition-all duration-200"
 
 // DEPOIS:
 "relative p-1 sm:p-2 min-h-[45px] sm:min-h-[65px] border border-gray-200 rounded-lg transition-all duration-200"
-```
+\`\`\`
 
 #### 3.3 Reduzir Gaps do Grid
-```tsx
+\`\`\`tsx
 // ANTES:
 <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-4">
 <div className="grid grid-cols-7 gap-1 sm:gap-2">
@@ -122,21 +122,21 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 // DEPOIS:
 <div className="grid grid-cols-7 gap-1 mb-2 sm:mb-3">
 <div className="grid grid-cols-7 gap-1">
-```
+\`\`\`
 
 #### 3.4 Compactar Legenda
-```tsx
+\`\`\`tsx
 // ANTES:
 <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-green-100 space-y-4">
 
 // DEPOIS:
 <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-green-100 space-y-3">
-```
+\`\`\`
 
 ### **FASE 4: Otimização do Header** ⏱️ *15min*
 
 #### 4.1 Reduzir Padding Vertical
-```tsx
+\`\`\`tsx
 // components/layout/header.tsx
 
 // ANTES:
@@ -144,16 +144,16 @@ Otimizar o uso do espaço na tela da interface de fechamento de caixa para elimi
 
 // DEPOIS:
 <div className="flex items-center justify-between px-4 py-2">
-```
+\`\`\`
 
 ### **FASE 5: Ajustes Responsivos** ⏱️ *30min*
 
 #### 5.1 Otimizar para Diferentes Tamanhos de Tela
-```tsx
+\`\`\`tsx
 // Adicionar classes mais específicas para diferentes breakpoints
 // Usar h-screen onde apropriado para aproveitamento máximo
 // Ajustar min-height das células em mobile para serem ainda menores
-```
+\`\`\`
 
 ---
 
